@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage My Shifts - All Workers</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">
+            <h1>Manage My Shifts</h1>
+            <span class="admin-badge">Administrator</span>
+        </div>
+        <nav class="top-menu">
+            <ul>
+                <li><a href="admin-home.html">Dashboard</a></li>
+                <li><a href="all-shifts.html">All Shifts</a></li>
+                <li><a href="all-workers.html" class="active">All Workers</a></li>
+                <li class="user-greeting">Hello, <span id="userName"></span></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2>All Workers</h2>
+            </div>
+
+            <div class="form-container">
+                <p style="text-align: center; color: #666; padding: 40px;">
+                    This page is under construction.
+                    <br><br>
+                    Please use the navigation menu to access other pages.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <nav class="footer-menu">
+            <ul>
+                <li><a href="admin-home.html">Dashboard</a></li>
+                <li><a href="all-shifts.html">All Shifts</a></li>
+                <li><a href="all-workers.html">All Workers</a></li>
+                <li><a href="#" id="footerLogout">Logout</a></li>
+            </ul>
+        </nav>
+    </footer>
+
+    <script src="utils.js"></script>
+    <script>
+        // Check authentication and admin status
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUsername = checkAuth();
+            if (!currentUsername) {
+                return;
+            }
+
+            const userData = getUserData(currentUsername);
+            if (!userData || !userData.isAdmin) {
+                alert('Access denied. This page is for administrators only.');
+                window.location.href = 'home.html';
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Save user data
+        const isAdmin = document.getElementById('isAdmin').checked;
+
         const newUserData = {
             email: email,
             username: username,
@@ -88,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
             firstName: firstName,
             lastName: lastName,
             birthDate: birthDate,
+            isAdmin: isAdmin,
             registeredAt: new Date().toISOString()
         };
 

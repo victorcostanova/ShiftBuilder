@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage My Shifts - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">
+            <h1>Manage My Shifts</h1>
+            <span class="admin-badge">Administrator</span>
+        </div>
+        <nav class="top-menu">
+            <ul>
+                <li><a href="admin-home.html" class="active">Dashboard</a></li>
+                <li><a href="all-shifts.html">All Shifts</a></li>
+                <li><a href="all-workers.html">All Workers</a></li>
+                <li class="user-greeting">Hello, <span id="userName"></span></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2>Administrator Dashboard</h2>
+            </div>
+
+            <div class="statistics">
+                <!-- Worker of the Month Card -->
+                <div class="stat-card">
+                    <h3>Worker of the Month</h3>
+                    <p class="worker-name" id="workerOfMonth">No data available</p>
+                    <p class="stat-value" id="workerShiftCount">0 shifts</p>
+                </div>
+
+                <!-- This Week's Shifts Card -->
+                <div class="stat-card full-width">
+                    <h3>This Week's Past Shifts</h3>
+                    <div class="shifts-table-container">
+                        <table class="shifts-table">
+                            <thead>
+                                <tr>
+                                    <th>Worker Name</th>
+                                    <th>Date</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Workplace</th>
+                                    <th>Total Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weeklyShiftsTableBody">
+                                <tr>
+                                    <td colspan="6" class="no-data">No shifts this week</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Highest Earning Month Card -->
+                <div class="stat-card">
+                    <h3>Highest Earning Month (All Workers)</h3>
+                    <p id="highestMonth">No data available</p>
+                    <p class="stat-value" id="highestAmount">$0.00</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <nav class="footer-menu">
+            <ul>
+                <li><a href="admin-home.html">Dashboard</a></li>
+                <li><a href="all-shifts.html">All Shifts</a></li>
+                <li><a href="all-workers.html">All Workers</a></li>
+                <li><a href="#" id="footerLogout">Logout</a></li>
+            </ul>
+        </nav>
+    </footer>
+
+    <script src="utils.js"></script>
+    <script src="admin-home.js"></script>
+</body>
+</html>

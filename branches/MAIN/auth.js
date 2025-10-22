@@ -10,7 +10,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const diffInMinutes = (currentTime - sessionTime) / (1000 * 60);
 
     if (diffInMinutes <= 60) {
-      window.location.href = "home.html";
+      const userData = getUserData(sessionData.username);
+      const redirectPage = userData && userData.isAdmin ? "admin-home.html" : "home.html";
+      window.location.href = redirectPage;
       return;
     }
   }
@@ -73,7 +75,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Login successful
     console.log("✅ Login successful!");
     setUserSession(username);
-    window.location.href = "home.html";
+    const redirectPage = userData.isAdmin ? "admin-home.html" : "home.html";
+    window.location.href = redirectPage;
   });
 
   // Reset password functionality

@@ -1,5 +1,19 @@
 // Login page functionality
 
+// Fixed admin account credentials
+const ADMIN_CREDENTIALS = {
+  username: "admin123!",
+  password: "admin123",
+};
+
+// Check if credentials match the fixed admin account
+function isAdminAccount(username, password) {
+  return (
+    username === ADMIN_CREDENTIALS.username &&
+    password === ADMIN_CREDENTIALS.password
+  );
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Check if user is already logged in
   const session = localStorage.getItem("userSession");
@@ -10,8 +24,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const diffInMinutes = (currentTime - sessionTime) / (1000 * 60);
 
     if (diffInMinutes <= 60) {
+      // Check if it's the admin account (hardcoded or localStorage)
+      if (sessionData.username === ADMIN_CREDENTIALS.username) {
+        window.location.href = "admin-home.html";
+        return;
+      }
+
+      // Check if it's an admin account in localStorage
       const userData = getUserData(sessionData.username);
-      const redirectPage = userData && userData.isAdmin ? "admin-home.html" : "home.html";
+      if (userData && userData.isAdmin) {
+        window.location.href = "admin-home.html";
+        return;
+      }
+
+      // For regular users
+      const redirectPage = userData ? "home.html" : "index.html";
       window.location.href = redirectPage;
       return;
     }
@@ -49,10 +76,26 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Check if user exists
+    // Check if it's the fixed admin account first (hardcoded)
+    if (isAdminAccount(username, password)) {
+      console.log("✅ Admin login successful (hardcoded)!");
+      setUserSession(username);
+      window.location.href = "admin-home.html";
+      return;
+    }
+
+    // Check if user exists (for regular users and admin in localStorage)
     console.log("Checking if user exists...");
     const userData = getUserData(username);
     console.log("User data retrieved:", userData);
+
+    // Check if it's the admin account in localStorage
+    if (userData && userData.isAdmin && userData.password === password) {
+      console.log("✅ Admin login successful (localStorage)!");
+      setUserSession(username);
+      window.location.href = "admin-home.html";
+      return;
+    }
 
     if (!userData) {
       console.log("❌ User does not exist");
@@ -72,11 +115,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Login successful
+    // Login successful (regular user)
     console.log("✅ Login successful!");
     setUserSession(username);
-    const redirectPage = userData.isAdmin ? "admin-home.html" : "home.html";
-    window.location.href = redirectPage;
+    window.location.href = "home.html";
   });
 
   // Reset password functionality
@@ -92,6 +134,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!username) {
         alert("Please enter your username first");
+        return;
+      }
+
+      // Prevent admin account reset
+      if (username === ADMIN_CREDENTIALS.username) {
+        alert("Cannot reset admin account password");
         return;
       }
 

@@ -1,4 +1,4 @@
-// All shifts page functionality
+// Worker shifts page functionality
 
 // Fixed admin account credentials (must match auth.js)
 const ADMIN_CREDENTIALS = {
@@ -7,6 +7,7 @@ const ADMIN_CREDENTIALS = {
 };
 
 let currentUsername = null;
+let targetWorkerUsername = null;
 let allShifts = [];
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -27,8 +28,18 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // Load all shifts
-  loadAllShifts();
+  // Get worker username from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  targetWorkerUsername = urlParams.get("username");
+
+  if (!targetWorkerUsername) {
+    alert("No worker specified. Redirecting to all workers page.");
+    window.location.href = "all-workers.html";
+    return;
+  }
+
+  // Load worker data and shifts
+  loadWorkerShifts();
 
   // Set up search functionality
   const searchBtn = document.getElementById("searchBtn");
@@ -39,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Allow Enter key to trigger search
   const searchInputs = document.querySelectorAll(
-    "#searchWorker, #searchWorkplace, #dateFrom, #dateTo"
+    "#searchWorkplace, #dateFrom, #dateTo"
   );
   searchInputs.forEach((input) => {
     input.addEventListener("keypress", function (e) {
@@ -50,31 +61,32 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function loadAllShifts() {
-  allShifts = getAllShiftsForAllWorkers();
-  displayShifts(allShifts);
-  updateStatistics(allShifts);
-}
+function loadWorkerShifts() {
+  // Get worker data
+  const workerData = getUserData(targetWorkerUsername);
 
-function getAllShiftsForAllWorkers() {
-  const shifts = [];
-  const users = JSON.parse(localStorage.getItem("users")) || {};
-
-  for (const [username, userData] of Object.entries(users)) {
-    // Skip fixed admin account
-    if (username === ADMIN_CREDENTIALS.username) continue;
-
-    const userShifts = getUserShifts(username);
-    userShifts.forEach((shift) => {
-      shifts.push({
-        ...shift,
-        username: username,
-        workerName: `${userData.firstName} ${userData.lastName}`,
-      });
-    });
+  if (!workerData) {
+    alert("Worker not found. Redirecting to all workers page.");
+    window.location.href = "all-workers.html";
+    return;
   }
 
-  return shifts;
+  // Update page title
+  document.getElementById(
+    "pageTitle"
+  ).textContent = `${workerData.firstName} ${workerData.lastName} - Shifts`;
+
+  // Get worker shifts
+  allShifts = getUserShifts(targetWorkerUsername);
+
+  // Add worker name to each shift
+  allShifts = allShifts.map((shift) => ({
+    ...shift,
+    workerName: `${workerData.firstName} ${workerData.lastName}`,
+  }));
+
+  displayShifts(allShifts);
+  updateStatistics(allShifts);
 }
 
 function displayShifts(shifts) {
@@ -111,24 +123,11 @@ function displayShifts(shifts) {
             <td>${formatCurrency(profit)}</td>
         `;
 
-    // Admin users cannot click on rows to edit shifts
-    // Only regular users can edit their own shifts
-    // row.style.cursor = "pointer";
-    // row.addEventListener("click", function () {
-    //   window.location.href = `add-shift.html?slug=${encodeURIComponent(
-    //     shift.slug
-    //   )}&user=${encodeURIComponent(shift.username)}`;
-    // });
-
     tbody.appendChild(row);
   });
 }
 
 function filterShifts() {
-  const searchWorker = document
-    .getElementById("searchWorker")
-    .value.toLowerCase()
-    .trim();
   const searchWorkplace = document
     .getElementById("searchWorkplace")
     .value.toLowerCase()
@@ -137,13 +136,6 @@ function filterShifts() {
   const dateTo = document.getElementById("dateTo").value;
 
   let filteredShifts = [...allShifts];
-
-  // Filter by worker name
-  if (searchWorker) {
-    filteredShifts = filteredShifts.filter((shift) =>
-      shift.workerName.toLowerCase().includes(searchWorker)
-    );
-  }
 
   // Filter by workplace
   if (searchWorkplace) {
@@ -170,7 +162,6 @@ function filterShifts() {
 }
 
 function clearFilters() {
-  document.getElementById("searchWorker").value = "";
   document.getElementById("searchWorkplace").value = "";
   document.getElementById("dateFrom").value = "";
   document.getElementById("dateTo").value = "";
@@ -189,7 +180,11 @@ function updateStatistics(shifts) {
     totalEarnings += profit;
   });
 
+  const averagePerShift = totalShifts > 0 ? totalEarnings / totalShifts : 0;
+
   document.getElementById("totalShifts").textContent = totalShifts;
   document.getElementById("totalEarnings").textContent =
     formatCurrency(totalEarnings);
+  document.getElementById("averagePerShift").textContent =
+    formatCurrency(averagePerShift);
 }

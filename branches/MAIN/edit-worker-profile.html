@@ -3,22 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage My Shifts - Edit Profile</title>
+    <title>Manage My Shifts - Edit Worker Profile</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="main-header">
       <nav class="top-menu">
         <ul>
-          <li><a href="home.html">My Shifts</a></li>
-          <li><a href="edit-profile.html" class="active">Edit Profile</a></li>
+          <li><a href="admin-home.html">Dashboard</a></li>
+          <li><a href="all-shifts.html">All Shifts</a></li>
+          <li><a href="all-workers.html">All Workers</a></li>
           <li><a href="#" id="logoutBtn">Logout</a></li>
         </ul>
       </nav>
       <div class="logo">
         <h1>Manage My Shifts</h1>
         <div class="user-info">
-          <span class="admin-badge">Worker</span>
+          <span class="admin-badge">Administrator</span>
           <div class="user-greeting">Hello, <span id="userName"></span></div>
         </div>
       </div>
@@ -27,19 +28,13 @@
     <main class="main-content">
       <div class="container">
         <div class="form-container">
-          <h2>Edit Profile</h2>
+          <h2>Edit Worker Profile</h2>
 
-          <form id="editProfileForm" class="auth-form">
+          <form id="editWorkerProfileForm" class="auth-form">
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" id="email" name="email" required />
               <span class="error-message" id="emailError"></span>
-            </div>
-
-            <div class="form-group">
-              <label for="username">Username (min 6 characters)</label>
-              <input type="text" id="username" name="username" required />
-              <span class="error-message" id="usernameError"></span>
             </div>
 
             <div class="form-group">
@@ -81,7 +76,21 @@
               <button type="submit" class="btn btn-primary">
                 Update Profile
               </button>
-              <a href="home.html" class="btn btn-secondary">Cancel</a>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="filterWorkerShifts()"
+              >
+                Filter Shifts
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="deleteWorker()"
+              >
+                Delete Worker
+              </button>
+              <a href="all-workers.html" class="btn btn-secondary">Cancel</a>
             </div>
           </form>
         </div>
@@ -91,14 +100,15 @@
     <footer class="main-footer">
       <nav class="footer-menu">
         <ul>
-          <li><a href="home.html">My Shifts</a></li>
-          <li><a href="edit-profile.html">Edit Profile</a></li>
+          <li><a href="admin-home.html">Dashboard</a></li>
+          <li><a href="all-shifts.html">All Shifts</a></li>
+          <li><a href="all-workers.html">All Workers</a></li>
           <li><a href="#" id="footerLogout">Logout</a></li>
         </ul>
       </nav>
     </footer>
 
     <script src="utils.js"></script>
-    <script src="edit-profile.js"></script>
+    <script src="edit-worker-profile.js"></script>
   </body>
 </html>

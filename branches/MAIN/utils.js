@@ -138,8 +138,8 @@ function validateAge(birthDate) {
     age--;
   }
 
-  if (age < 18 || age > 65) {
-    return { valid: false, message: "Age must be between 18 and 65" };
+  if (age < 6 || age > 130) {
+    return { valid: false, message: "Age must be between 6 and 130" };
   }
   return { valid: true, age: age };
 }

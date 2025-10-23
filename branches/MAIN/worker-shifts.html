@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage My Shifts - All Shifts</title>
+    <title>Manage My Shifts - Worker Shifts</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,7 +11,7 @@
       <nav class="top-menu">
         <ul>
           <li><a href="admin-home.html">Dashboard</a></li>
-          <li><a href="all-shifts.html" class="active">All Shifts</a></li>
+          <li><a href="all-shifts.html">All Shifts</a></li>
           <li><a href="all-workers.html">All Workers</a></li>
           <li><a href="#" id="logoutBtn">Logout</a></li>
         </ul>
@@ -28,20 +28,14 @@
     <main class="main-content">
       <div class="container">
         <div class="page-header">
-          <h2>All Shifts</h2>
+          <h2 id="pageTitle">Worker Shifts</h2>
+          <a href="all-workers.html" class="btn btn-secondary"
+            >Back to Workers</a
+          >
         </div>
 
         <div class="search-section">
           <div class="search-filters">
-            <div class="form-group">
-              <label for="searchWorker">Search by Worker Name</label>
-              <input
-                type="text"
-                id="searchWorker"
-                placeholder="Enter worker name..."
-              />
-            </div>
-
             <div class="form-group">
               <label for="searchWorkplace">Search by Shift Place</label>
               <input
@@ -76,7 +70,7 @@
                 <th>End Time</th>
                 <th>Price per Hour</th>
                 <th>Shift Place</th>
-                <th>Total Profit</th>
+                <th>Total Profit per Shift</th>
               </tr>
             </thead>
             <tbody id="shiftsTableBody">
@@ -96,6 +90,10 @@
             <h3>Total Earnings</h3>
             <p class="stat-value" id="totalEarnings">$0.00</p>
           </div>
+          <div class="stat-card">
+            <h3>Average per Shift</h3>
+            <p class="stat-value" id="averagePerShift">$0.00</p>
+          </div>
         </div>
       </div>
     </main>
@@ -112,6 +110,6 @@
     </footer>
 
     <script src="utils.js"></script>
-    <script src="all-shifts.js"></script>
+    <script src="worker-shifts.js"></script>
   </body>
 </html>

@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage My Shifts - All Shifts</title>
-    <link rel="stylesheet" href="styles.css" />
+    <title>Manage My Shifts - All Workers</title>
+    <link rel="stylesheet" href="../styles/styles.css" />
   </head>
   <body>
     <header class="main-header">
       <nav class="top-menu">
         <ul>
           <li><a href="admin-home.html">Dashboard</a></li>
-          <li><a href="all-shifts.html" class="active">All Shifts</a></li>
-          <li><a href="all-workers.html">All Workers</a></li>
+          <li><a href="all-shifts.html">All Shifts</a></li>
+          <li><a href="all-workers.html" class="active">All Workers</a></li>
           <li><a href="#" id="logoutBtn">Logout</a></li>
         </ul>
       </nav>
@@ -28,7 +28,7 @@
     <main class="main-content">
       <div class="container">
         <div class="page-header">
-          <h2>All Shifts</h2>
+          <h2>All Workers</h2>
         </div>
 
         <div class="search-section">
@@ -43,22 +43,12 @@
             </div>
 
             <div class="form-group">
-              <label for="searchWorkplace">Search by Shift Place</label>
+              <label for="searchEmail">Search by Email</label>
               <input
                 type="text"
-                id="searchWorkplace"
-                placeholder="Enter workplace..."
+                id="searchEmail"
+                placeholder="Enter email..."
               />
-            </div>
-
-            <div class="form-group">
-              <label for="dateFrom">From Date</label>
-              <input type="date" id="dateFrom" />
-            </div>
-
-            <div class="form-group">
-              <label for="dateTo">To Date</label>
-              <input type="date" id="dateTo" />
             </div>
 
             <button class="btn btn-secondary" id="searchBtn">Search</button>
@@ -70,18 +60,19 @@
           <table class="shifts-table">
             <thead>
               <tr>
-                <th>Worker Name</th>
-                <th>Date</th>
-                <th>Beginning Time</th>
-                <th>End Time</th>
-                <th>Price per Hour</th>
-                <th>Shift Place</th>
-                <th>Total Profit</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Birth Date</th>
+                <th>Age</th>
+                <th>Registered At</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="shiftsTableBody">
+            <tbody id="workersTableBody">
               <tr>
-                <td colspan="7" class="no-data">No shifts found</td>
+                <td colspan="8" class="no-data">No workers found</td>
               </tr>
             </tbody>
           </table>
@@ -89,12 +80,12 @@
 
         <div class="statistics">
           <div class="stat-card">
-            <h3>Total Shifts</h3>
-            <p class="stat-value" id="totalShifts">0</p>
+            <h3>Total Workers</h3>
+            <p class="stat-value" id="totalWorkers">0</p>
           </div>
           <div class="stat-card">
-            <h3>Total Earnings</h3>
-            <p class="stat-value" id="totalEarnings">$0.00</p>
+            <h3>Average Age</h3>
+            <p class="stat-value" id="averageAge">0</p>
           </div>
         </div>
       </div>
@@ -111,7 +102,7 @@
       </nav>
     </footer>
 
-    <script src="utils.js"></script>
-    <script src="all-shifts.js"></script>
+    <script src="../javascript/utils.js"></script>
+    <script src="../javascript/all-workers.js"></script>
   </body>
 </html>

@@ -1,0 +1,145 @@
+<header class="main-header">
+  <div class="logo">
+    <h1>Manage My Shifts</h1>
+  </div>
+  <nav class="top-menu">
+    <ul>
+      <li><a routerLink="/worker-home">My Shifts</a></li>
+      <li><a routerLink="/edit-profile">Edit Profile</a></li>
+      <li class="user-greeting">
+        Hello, <span>{{ currentUsername }}</span>
+      </li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="main-content">
+  <div class="container">
+    <div class="form-container">
+      <h2>{{ isEditing ? 'Edit Shift' : 'Add Shift' }}</h2>
+
+      <form (ngSubmit)="onSubmit()" #shiftForm="ngForm" class="shift-form">
+        <div class="form-group">
+          <label for="shiftDate">Date *</label>
+          <input
+            type="date"
+            id="shiftDate"
+            name="shiftDate"
+            [(ngModel)]="shiftData.date"
+            #shiftDate="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="shiftDateError">{{ shiftDateError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="startTime">Start Time *</label>
+          <input
+            type="time"
+            id="startTime"
+            name="startTime"
+            [(ngModel)]="shiftData.startTime"
+            #startTime="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="startTimeError">{{ startTimeError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="endTime">End Time *</label>
+          <input
+            type="time"
+            id="endTime"
+            name="endTime"
+            [(ngModel)]="shiftData.endTime"
+            #endTime="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="endTimeError">{{ endTimeError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="hourlyWage">Hourly Wage ($) *</label>
+          <input
+            type="number"
+            id="hourlyWage"
+            name="hourlyWage"
+            [(ngModel)]="shiftData.hourlyWage"
+            #hourlyWage="ngModel"
+            step="0.01"
+            min="0"
+            required
+          />
+          <span class="error-message" *ngIf="hourlyWageError">{{ hourlyWageError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="workplace">Workplace *</label>
+          <select
+            id="workplace"
+            name="workplace"
+            [(ngModel)]="shiftData.workplace"
+            #workplace="ngModel"
+            required
+          >
+            <option value="">Select a workplace</option>
+            <option value="Office A">Office A</option>
+            <option value="Office B">Office B</option>
+            <option value="Remote">Remote</option>
+            <option value="Client Site">Client Site</option>
+            <option value="Other">Other</option>
+          </select>
+          <span class="error-message" *ngIf="workplaceError">{{ workplaceError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="shiftSlug">Shift Name (Unique) *</label>
+          <input
+            type="text"
+            id="shiftSlug"
+            name="shiftSlug"
+            [(ngModel)]="shiftData.slug"
+            #shiftSlug="ngModel"
+            [disabled]="isEditing"
+            placeholder="e.g., morning-shift-jan-15"
+            required
+          />
+          <span class="error-message" *ngIf="shiftSlugError">{{ shiftSlugError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="comments">Comments</label>
+          <textarea
+            id="comments"
+            name="comments"
+            [(ngModel)]="shiftData.comments"
+            #comments="ngModel"
+            rows="4"
+            placeholder="Add any notes about this shift..."
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+            <span class="btn-text" [style.display]="isLoading ? 'none' : 'inline'">
+              {{ isEditing ? 'Update Shift' : 'Save Shift' }}
+            </span>
+            <span class="loader" [style.display]="isLoading ? 'inline-block' : 'none'"></span>
+          </button>
+          <a routerLink="/worker-home" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="main-footer">
+  <nav class="footer-menu">
+    <ul>
+      <li><a routerLink="/worker-home">My Shifts</a></li>
+      <li><a routerLink="/edit-profile">Edit Profile</a></li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+</footer>

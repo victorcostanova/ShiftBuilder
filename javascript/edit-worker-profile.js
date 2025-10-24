@@ -153,7 +153,7 @@ function handleFormSubmission(e) {
 
 function filterWorkerShifts() {
   // Navigate to worker shifts filter page
-  window.location.href = `worker-shifts.html?username=${encodeURIComponent(
+  window.location.href = `filtershifts-worker.html?username=${encodeURIComponent(
     targetWorkerUsername
   )}`;
 }

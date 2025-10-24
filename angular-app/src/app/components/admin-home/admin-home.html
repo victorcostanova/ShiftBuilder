@@ -1,0 +1,86 @@
+<header class="main-header">
+  <nav class="top-menu">
+    <ul>
+      <li><a routerLink="/admin-home" routerLinkActive="active">Dashboard</a></li>
+      <li><a routerLink="/all-shifts">All Shifts</a></li>
+      <li><a routerLink="/all-workers">All Workers</a></li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+  <div class="logo">
+    <h1>Manage My Shifts</h1>
+    <div class="user-info">
+      <span class="admin-badge">Administrator</span>
+      <div class="user-greeting">
+        Hello, <span>{{ currentUsername }}</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="container">
+    <div class="page-header">
+      <h2>Administrator Dashboard</h2>
+    </div>
+
+    <div class="statistics">
+      <!-- Worker of the Month Card -->
+      <div class="stat-card">
+        <h3>Worker of the Month</h3>
+        <p class="worker-name">{{ workerOfMonth }}</p>
+        <p class="stat-value">{{ workerShiftCount }}</p>
+      </div>
+
+      <!-- This Week's Shifts Card -->
+      <div class="stat-card full-width">
+        <h3>This Week's Past Shifts</h3>
+        <div class="shifts-table-container">
+          <table class="shifts-table">
+            <thead>
+              <tr>
+                <th>Worker Name</th>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Workplace</th>
+                <th>Total Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="weeklyShifts.length === 0">
+                <td colspan="6" class="no-data">No shifts this week</td>
+              </tr>
+              <tr *ngFor="let shift of weeklyShifts">
+                <td>{{ shift.workerName }}</td>
+                <td>{{ formatDate(shift.date) }}</td>
+                <td>{{ shift.startTime }}</td>
+                <td>{{ shift.endTime }}</td>
+                <td>{{ shift.workplace }}</td>
+                <td>{{ calculateProfit(shift.startTime, shift.endTime, shift.hourlyWage) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Highest Earning Month Card -->
+      <div class="stat-card">
+        <h3>Highest Earning Month (All Workers)</h3>
+        <p>{{ highestMonth }}</p>
+        <p class="stat-value">{{ formatCurrency(highestAmount) }}</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="main-footer">
+  <nav class="footer-menu">
+    <ul>
+      <li><a routerLink="/admin-home">Dashboard</a></li>
+      <li><a routerLink="/all-shifts">All Shifts</a></li>
+      <li><a routerLink="/all-workers">All Workers</a></li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+</footer>

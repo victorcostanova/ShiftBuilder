@@ -1,0 +1,129 @@
+<header class="main-header">
+  <nav class="top-menu">
+    <ul>
+      <li><a routerLink="/admin-home">Dashboard</a></li>
+      <li><a routerLink="/all-shifts">All Shifts</a></li>
+      <li><a routerLink="/all-workers">All Workers</a></li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+  <div class="logo">
+    <h1>Manage My Shifts</h1>
+    <div class="user-info">
+      <span class="admin-badge">Administrator</span>
+      <div class="user-greeting">
+        Hello, <span>{{ currentUsername }}</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="container">
+    <div class="form-container">
+      <h2>Edit Worker Profile</h2>
+
+      <form (ngSubmit)="onSubmit()" #editWorkerProfileForm="ngForm" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            [(ngModel)]="workerData.email"
+            #email="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="emailError">{{ emailError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password (min 6 characters)</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            [(ngModel)]="workerData.password"
+            #password="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="passwordError">{{ passwordError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            [(ngModel)]="workerData.confirmPassword"
+            #confirmPassword="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="confirmPasswordError">{{ confirmPasswordError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="firstName">First Name (min 2 letters)</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            [(ngModel)]="workerData.firstName"
+            #firstName="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="firstNameError">{{ firstNameError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Last Name (min 2 letters)</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            [(ngModel)]="workerData.lastName"
+            #lastName="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="lastNameError">{{ lastNameError }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="birthDate">Birth Date (Age 6-130)</label>
+          <input
+            type="date"
+            id="birthDate"
+            name="birthDate"
+            [(ngModel)]="workerData.birthDate"
+            #birthDate="ngModel"
+            required
+          />
+          <span class="error-message" *ngIf="birthDateError">{{ birthDateError }}</span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Update Profile</button>
+          <button type="button" class="btn btn-secondary" (click)="filterWorkerShifts()">
+            Filter Shifts
+          </button>
+          <button type="button" class="btn btn-danger" (click)="deleteWorker()">
+            Delete Worker
+          </button>
+          <a routerLink="/all-workers" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="main-footer">
+  <nav class="footer-menu">
+    <ul>
+      <li><a routerLink="/admin-home">Dashboard</a></li>
+      <li><a routerLink="/all-shifts">All Shifts</a></li>
+      <li><a routerLink="/all-workers">All Workers</a></li>
+      <li><a href="#" (click)="logout($event)">Logout</a></li>
+    </ul>
+  </nav>
+</footer>

@@ -39,7 +39,7 @@ function loadShiftData(slug) {
 
   if (!shift) {
     alert("Shift not found!");
-    window.location.href = "home.html";
+    window.location.href = "worker-home.html";
     return;
   }
 
@@ -151,7 +151,7 @@ function handleSubmit(e) {
       ? "Shift updated successfully!"
       : "Shift added successfully!";
     alert(message);
-    window.location.href = "home.html";
+    window.location.href = "worker-home.html";
   }, 500);
 }
 

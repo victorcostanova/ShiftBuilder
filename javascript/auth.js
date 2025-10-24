@@ -113,7 +113,7 @@ function attemptLogin(username, password) {
 
   return {
     success: true,
-    redirectUrl: "home.html",
+    redirectUrl: "worker-home.html",
   };
 }
 
@@ -199,7 +199,7 @@ function getRedirectUrl(username) {
     return "admin-home.html";
   }
 
-  return userData ? "home.html" : null;
+  return userData ? "worker-home.html" : null;
 }
 
 /**

@@ -161,5 +161,5 @@ function handleUpdate(e) {
   }
 
   alert("Profile updated successfully!");
-  window.location.href = "home.html";
+  window.location.href = "worker-home.html";
 }

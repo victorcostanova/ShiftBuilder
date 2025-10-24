@@ -5,7 +5,9 @@ A full-stack client-side application for tracking work shifts and calculating ea
 ## Features
 
 ### User Management
+
 - **User Registration** with comprehensive validation
+
   - Email validation
   - Username requirements (min 6 chars, letters, numbers, special character)
   - Password requirements (min 6 chars)
@@ -13,6 +15,7 @@ A full-stack client-side application for tracking work shifts and calculating ea
   - Age restriction (18-65 years)
 
 - **User Authentication**
+
   - Secure login system
   - 60-minute session management
   - Password reset (deletes all user data)
@@ -23,7 +26,9 @@ A full-stack client-side application for tracking work shifts and calculating ea
   - Username change support with data migration
 
 ### Shift Management
+
 - **Add Shifts**
+
   - Date, start time, end time
   - Hourly wage tracking
   - Workplace selection
@@ -32,11 +37,13 @@ A full-stack client-side application for tracking work shifts and calculating ea
   - Loading spinner during save
 
 - **Edit Shifts**
+
   - Modify existing shift details
   - Prevent duplicate shift names
   - Preserve shift history
 
 - **Delete Shifts**
+
   - Confirmation before deletion
   - Permanent removal from records
 
@@ -46,15 +53,18 @@ A full-stack client-side application for tracking work shifts and calculating ea
   - Date-based organization
 
 ### Search & Filter
+
 - **Search by shift name** - Find shifts by name, workplace, or comments
 - **Date range filtering** - Filter shifts between specific dates
 - **Clear filters** - Reset all search criteria
 
 ### Statistics
+
 - **Highest Earning Month** - Automatically calculated and displayed
 - **Total Profit per Shift** - Real-time calculation based on hours worked and wage
 
 ### Responsive Design
+
 - Mobile-friendly interface
 - Tablet and desktop support
 - Touch-optimized interactions
@@ -65,14 +75,14 @@ A full-stack client-side application for tracking work shifts and calculating ea
 capstone_1/
 ├── index.html              # Login page (entry point)
 ├── register.html           # User registration
-├── home.html              # Main dashboard with shifts table
+├── worker-home.html         # Main dashboard with shifts table
 ├── add-shift.html         # Add/edit shift form
 ├── edit-profile.html      # User profile editor
 ├── styles.css             # Main stylesheet (responsive)
 ├── utils.js               # Utility functions and validation
 ├── auth.js                # Login functionality
 ├── register.js            # Registration functionality
-├── home.js                # Home page and shift display
+├── worker-home.js          # Home page and shift display
 ├── shift-form.js          # Shift creation/editing
 ├── edit-profile.js        # Profile editing
 └── README.md              # Documentation
@@ -83,10 +93,12 @@ capstone_1/
 ### Getting Started
 
 1. **Open the Application**
+
    - Open `index.html` in a web browser
    - No server required - runs entirely in the browser
 
 2. **Register a New Account**
+
    - Click "Register here" on the login page
    - Fill in all required fields:
      - Valid email address
@@ -104,6 +116,7 @@ capstone_1/
 ### Managing Shifts
 
 1. **Add a Shift**
+
    - Click the "+ Add Shift" button on the home page
    - Fill in shift details:
      - Date of the shift
@@ -115,11 +128,13 @@ capstone_1/
    - Click "Save Shift"
 
 2. **Edit a Shift**
+
    - Click the "Edit" button on any shift in the table
    - Modify the shift details
    - Click "Update Shift"
 
 3. **Delete a Shift**
+
    - Click the "Delete" button on any shift
    - Confirm the deletion
 
@@ -160,6 +175,7 @@ capstone_1/
 ### Data Storage
 
 All data is stored in **browser localStorage**:
+
 - `users`: User account information
 - `shifts_{username}`: User-specific shift records
 - `userSession`: Active session data (expires after 60 minutes)
@@ -167,28 +183,35 @@ All data is stored in **browser localStorage**:
 ### Validation Rules
 
 **Username**:
+
 - Minimum 6 characters
 - Must contain letters, numbers, and special characters
 
 **Password**:
+
 - Minimum 6 characters
 - No complexity requirements beyond length
 
 **Names**:
+
 - Minimum 2 letters
 - Letters only (no numbers or special characters)
 
 **Age**:
+
 - Must be between 18 and 65 years old
 
 **Email**:
+
 - Must be valid email format
 
 **Shift Times**:
+
 - End time must be after start time
 - Hours and profit calculated automatically
 
 **Shift Name (Slug)**:
+
 - Must be unique per user
 - Can contain any characters
 - Used as identifier for editing/deleting
@@ -202,6 +225,7 @@ All data is stored in **browser localStorage**:
 ## Development Timeline
 
 As per specification:
+
 - Register page: 1 day ✅
 - Login page: 0.5 day ✅
 - Edit profile page: 0.5 day ✅
@@ -212,6 +236,7 @@ As per specification:
 ## Security Notes
 
 ⚠️ **Important**: This is a client-side only application using localStorage:
+
 - Data is stored locally in the browser
 - No server-side validation or encryption
 - Data can be cleared by browser cache clearing
@@ -221,6 +246,7 @@ As per specification:
 ## Future Enhancements
 
 Potential improvements for production:
+
 - Backend API integration
 - Encrypted password storage
 - Database persistence

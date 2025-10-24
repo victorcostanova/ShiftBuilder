@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!isHardcodedAdmin && !isLocalStorageAdmin) {
     alert("Access denied. This page is for administrators only.");
-    window.location.href = "home.html";
+    window.location.href = "worker-home.html";
     return;
   }
 

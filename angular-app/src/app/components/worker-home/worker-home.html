@@ -3,13 +3,14 @@
     <ul>
       <li><a routerLink="/worker-home" routerLinkActive="active">My Shifts</a></li>
       <li><a routerLink="/edit-profile">Edit Profile</a></li>
+      <li *ngIf="isAdmin"><a routerLink="/admin-home">Admin Panel</a></li>
       <li><a href="#" (click)="logout($event)">Logout</a></li>
     </ul>
   </nav>
   <div class="logo">
     <h1>Manage My Shifts</h1>
     <div class="user-info">
-      <span class="admin-badge">Worker</span>
+      <span class="admin-badge">{{ isAdmin ? 'Administrator' : 'Worker' }}</span>
       <div class="user-greeting">
         Hello, <span>{{ currentUsername }}</span>
       </div>
@@ -21,7 +22,6 @@
   <div class="container">
     <div class="page-header">
       <h2>My Shifts</h2>
-      <a routerLink="/add-shift" class="btn btn-primary">+ Add Shift</a>
     </div>
 
     <div class="search-section">
@@ -57,8 +57,13 @@
           />
         </div>
 
-        <button class="btn btn-secondary" (click)="filterShifts()">Search</button>
-        <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+        <div class="search-buttons">
+          <a routerLink="/add-shift" class="btn btn-primary">+ Add Shift</a>
+          <div class="search-clear-buttons">
+            <button class="btn btn-secondary" (click)="filterShifts()">Search</button>
+            <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -89,8 +94,8 @@
             <td>{{ shift.workplace }}</td>
             <td>{{ calculateProfit(shift.startTime, shift.endTime, shift.hourlyWage) }}</td>
             <td class="action-buttons">
-              <button class="btn btn-primary" (click)="editShift(shift.slug)">Edit</button>
-              <button class="btn btn-danger" (click)="deleteShift(shift.slug)">Delete</button>
+              <button class="btn btn-primary" (click)="editShift(shift._id)">Edit</button>
+              <button class="btn btn-danger" (click)="deleteShift(shift._id)">Delete</button>
             </td>
           </tr>
         </tbody>

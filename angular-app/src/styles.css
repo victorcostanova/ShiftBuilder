@@ -135,11 +135,3 @@ body {
   margin: 0;
 }
 
-/* 
-   Note: Component-specific styles are in individual component CSS files:
-   - login.css, register.css (auth forms)
-   - admin-home.css, worker-home.css
-   - all-shifts.css, all-workers.css
-   - add-shift.css, edit-profile.css, edit-worker-profile.css
-   - filtershifts-worker.css
- */

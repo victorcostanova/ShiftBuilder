@@ -2,10 +2,10 @@
   <div class="auth-card">
     <div class="logo">
       <h1>Manage My Shifts</h1>
+      <h2>Login</h2>
     </div>
 
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="auth-form">
-      <h2>Login</h2>
 
       <div class="form-group">
         <label for="username">Username</label>
@@ -17,7 +17,9 @@
           #username="ngModel"
           required
         />
-        <span class="error-message" *ngIf="usernameError">{{ usernameError }}</span>
+        @if (usernameError) {
+        <span class="error-message">{{ usernameError }}</span>
+        }
       </div>
 
       <div class="form-group">
@@ -30,18 +32,16 @@
           #password="ngModel"
           required
         />
-        <span class="error-message" *ngIf="passwordError">{{ passwordError }}</span>
+        @if (passwordError) {
+        <span class="error-message">{{ passwordError }}</span>
+        }
       </div>
 
       <button type="submit" class="btn btn-primary">Login</button>
 
       <div class="auth-links">
         <p>Don't have an account? <a routerLink="/register">Register here</a></p>
-        <p>
-          <a href="#" (click)="resetPassword($event)"
-            >Forgot password? (This will delete all data)</a
-          >
-        </p>
+        <p>Administrator? <a routerLink="/admin-login">Admin login here</a></p>
       </div>
     </form>
   </div>

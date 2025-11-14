@@ -1,0 +1,720 @@
+{
+  "info": {
+    "name": "Shift Builder API",
+    "description": "Complete API collection for Shift Builder application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "shift_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permission",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/permission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission"]
+            }
+          }
+        },
+        {
+          "name": "Add Permission (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/permission",
+              "host": ["{{base_url}}"],
+              "path": ["api", "permission"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Create User (Regular)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData._id);",
+                  "    console.log(\"User ID saved:\", jsonData._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"pass\": \"password123\",\n  \"firstname\": \"Test\",\n  \"lastname\": \"User\",\n  \"username\": \"testuser123\",\n  \"birthDate\": \"1990-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user"]
+            }
+          }
+        },
+        {
+          "name": "Login (Regular User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log(\"Response Status:\", pm.response.code);",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const jsonData = pm.response.json();",
+                  "        ",
+                  "        if (jsonData.token) {",
+                  "            pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "            console.log(\"✅ Token saved to collection variable:\", jsonData.token.substring(0, 50) + \"...\");",
+                  "        }",
+                  "        ",
+                  "        if (jsonData.user && jsonData.user._id) {",
+                  "            pm.collectionVariables.set(\"user_id\", jsonData.user._id);",
+                  "            console.log(\"✅ User ID saved:\", jsonData.user._id);",
+                  "        }",
+                  "        ",
+                  "        if (pm.environment) {",
+                  "            pm.environment.set(\"token\", jsonData.token);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error(\"❌ Error parsing response:\", e);",
+                  "    }",
+                  "} else {",
+                  "    console.error(\"❌ Login failed with status:\", pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser123\",\n  \"pass\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "login"]
+            }
+          }
+        },
+        {
+          "name": "Logout User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    // Clear ALL tokens (both regular and admin)",
+                  "    pm.collectionVariables.set(\"token\", \"\");",
+                  "    pm.collectionVariables.set(\"admin_token\", \"\");",
+                  "    ",
+                  "    // Also clear from environment if exists",
+                  "    if (pm.environment) {",
+                  "        pm.environment.set(\"token\", \"\");",
+                  "        pm.environment.set(\"admin_token\", \"\");",
+                  "    }",
+                  "    ",
+                  "    console.log(\"✅ All tokens cleared from variables\");",
+                  "    console.log(\"✅ Token invalidated on server (blacklisted)\");",
+                  "} else {",
+                  "    console.error(\"❌ Logout failed:\", pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update User By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"firstname\": \"Updated\",\n    \"lastname\": \"Name\",\n    \"birthDate\": \"1990-01-15\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user"]
+            }
+          }
+        },
+        {
+          "name": "Delete User (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shift",
+      "item": [
+        {
+          "name": "Add Shift",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"shift_id\", jsonData._id);",
+                  "    console.log(\"Shift ID saved:\", jsonData._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"{{user_id}}\",\n  \"shift\": {\n    \"start\": \"2024-01-15T09:00:00Z\",\n    \"end\": \"2024-01-15T17:00:00Z\",\n    \"perHour\": 25.50,\n    \"place\": \"Office Building A\",\n    \"shiftName\": \"Morning Shift\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shifts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shifts"]
+            }
+          }
+        },
+        {
+          "name": "Get Shift By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/shifts?_id={{shift_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shifts"],
+              "query": [
+                {
+                  "key": "_id",
+                  "value": "{{shift_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Shift By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"{{shift_id}}\",\n  \"shift\": {\n    \"perHour\": 30.00,\n    \"place\": \"Updated Location\",\n    \"shiftName\": \"Updated Shift Name\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shifts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shifts"]
+            }
+          }
+        },
+        {
+          "name": "Get All Shifts (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/shifts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shifts"]
+            }
+          }
+        },
+        {
+          "name": "Delete Shift (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"{{shift_id}}\",\n  \"user\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shifts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shifts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comment",
+      "item": [
+        {
+          "name": "Create Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"comment_id\", jsonData._id);",
+                  "    console.log(\"Comment ID saved:\", jsonData._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": {\n    \"userId\": \"{{user_id}}\",\n    \"shiftId\": \"{{shift_id}}\",\n    \"description\": \"This is a test comment\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/comment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment"]
+            }
+          }
+        },
+        {
+          "name": "Get Comment By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/comment/{{comment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment", "{{comment_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All User Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/comment/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment", "user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Comment By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"{{comment_id}}\",\n  \"comment\": {\n    \"shiftId\": \"{{shift_id}}\",\n    \"description\": \"Updated comment description\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/comment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment"]
+            }
+          }
+        },
+        {
+          "name": "Get All Comments (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment"]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comment/{{comment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comment", "{{comment_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Setup",
+      "item": [
+        {
+          "name": "Create Admin User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log(\"Admin user created:\", jsonData._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"pass\": \"admin123\",\n  \"firstname\": \"Admin\",\n  \"lastname\": \"User\",\n  \"username\": \"admin\",\n  \"birthDate\": \"1985-05-20\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "admin"]
+            },
+            "description": "Create an admin user via API. Make sure permissions are initialized first."
+          }
+        },
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log(\"Response Status:\", pm.response.code);",
+                  "console.log(\"Response Body:\", pm.response.text());",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const jsonData = pm.response.json();",
+                  "        console.log(\"Parsed JSON:\", jsonData);",
+                  "        ",
+                  "        if (jsonData.token) {",
+                  "            pm.collectionVariables.set(\"admin_token\", jsonData.token);",
+                  "            console.log(\"✅ Admin token saved to collection variable:\", jsonData.token.substring(0, 50) + \"...\");",
+                  "        } else {",
+                  "            console.error(\"❌ No token in response:\", jsonData);",
+                  "        }",
+                  "        ",
+                  "        if (jsonData.user && jsonData.user._id) {",
+                  "            pm.collectionVariables.set(\"user_id\", jsonData.user._id);",
+                  "            console.log(\"✅ User ID saved:\", jsonData.user._id);",
+                  "        }",
+                  "        ",
+                  "        // Also set as environment variable if using environment",
+                  "        if (pm.environment) {",
+                  "            pm.environment.set(\"admin_token\", jsonData.token);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.error(\"❌ Error parsing response:\", e);",
+                  "        console.error(\"Response text:\", pm.response.text());",
+                  "    }",
+                  "} else {",
+                  "    console.error(\"❌ Login failed with status:\", pm.response.code);",
+                  "    console.error(\"Response:\", pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"pass\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "login"]
+            }
+          }
+        },
+        {
+          "name": "Logout Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    // Clear ALL tokens (both regular and admin)",
+                  "    pm.collectionVariables.set(\"token\", \"\");",
+                  "    pm.collectionVariables.set(\"admin_token\", \"\");",
+                  "    ",
+                  "    // Also clear from environment if exists",
+                  "    if (pm.environment) {",
+                  "        pm.environment.set(\"token\", \"\");",
+                  "        pm.environment.set(\"admin_token\", \"\");",
+                  "    }",
+                  "    ",
+                  "    console.log(\"✅ All tokens cleared from variables\");",
+                  "    console.log(\"✅ Token invalidated on server (blacklisted)\");",
+                  "} else {",
+                  "    console.error(\"❌ Logout failed:\", pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "logout"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -112,10 +112,23 @@ body {
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-relaxed);
   color: var(--color-neutral-800);
-  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-200) 100%);
-  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Background wallpaper for worker-home */
+:host {
+  display: block;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background: url('/assets/wallpaper2.jpg') center center / cover no-repeat;
+  background-attachment: fixed;
+}
+
+/* Override body background for worker-home */
+::ng-deep body {
+  background: transparent !important;
 }
 
 /* ========================================
@@ -135,24 +148,25 @@ body {
 
 .page-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: var(--space-8);
   padding: 0 var(--space-6);
 }
 
 .page-header h2 {
-  color: var(--color-neutral-800);
+  color: #30342d;
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.025em;
+  text-align: right;
 }
 
 /* ========================================
    HEADER & NAVIGATION
    ======================================== */
 .main-header {
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
+  background: linear-gradient(135deg, #695654 0%, #5a4846 100%);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
@@ -160,7 +174,7 @@ body {
   display: grid;
   grid-template-columns: auto 1fr auto;
   max-width: 100%;
-  padding: var(--space-6) var(--space-8);
+  padding: var(--space-3) var(--space-8);
   gap: var(--space-8);
   align-items: center;
 }
@@ -242,7 +256,7 @@ body {
 
 .top-menu a.active {
   background: var(--color-white);
-  color: var(--color-primary-800);
+  color: #695654;
   font-weight: var(--font-weight-semibold);
 }
 
@@ -271,7 +285,7 @@ body {
 .form-group label {
   display: block;
   margin-bottom: var(--space-2);
-  color: var(--color-neutral-600);
+  color: #30342d;
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
 }
@@ -292,8 +306,8 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-100);
+  border-color: #695654;
+  box-shadow: 0 0 0 3px rgba(105, 86, 84, 0.2);
 }
 
 /* ========================================
@@ -314,25 +328,25 @@ body {
 }
 
 .btn-primary {
-  background: var(--color-primary-500);
+  background: #695654;
   color: var(--color-white);
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-600);
+  background: #5a4846;
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
-  background: var(--color-neutral-500);
+  background: #695654;
   color: var(--color-white);
   margin-left: var(--space-3);
 }
 
 .btn-secondary:hover {
-  background: var(--color-neutral-600);
+  background: #5a4846;
   transform: translateY(-1px);
 }
 
@@ -360,19 +374,47 @@ body {
    SEARCH & FILTERS
    ======================================== */
 .search-section {
-  background: var(--color-white);
+  background: rgba(202, 202, 197, 0.8);
   padding: var(--space-6);
   border-radius: var(--radius-xl);
   margin-bottom: var(--space-8);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .search-filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr) auto;
   gap: var(--space-4);
   align-items: end;
+}
+
+.search-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: stretch;
+  width: 240px;
+}
+
+.search-buttons .btn-primary {
+  width: 100%;
+  max-width: 240px;
+}
+
+.search-clear-buttons {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.search-clear-buttons .btn-secondary {
+  flex: 1;
+  width: calc(50% - var(--space-1));
+}
+
+.search-clear-buttons .btn-secondary:first-child {
+  margin-left: 0;
 }
 
 /* ========================================
@@ -381,20 +423,20 @@ body {
 .shifts-table-container {
   overflow-x: auto;
   margin-bottom: var(--space-8);
-  background: var(--color-white);
+  background: transparent;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: none;
+  border: none;
 }
 
 .shifts-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--color-white);
+  background: transparent;
 }
 
 .shifts-table th {
-  background: var(--color-primary-800);
+  background: linear-gradient(135deg, #695654 0%, #5a4846 100%);
   color: var(--color-white);
   padding: var(--space-4);
   text-align: left;
@@ -437,7 +479,7 @@ body {
 }
 
 .stat-card {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-800) 100%);
+  background: linear-gradient(135deg, #695654 0%, #5a4846 100%);
   color: var(--color-white);
   padding: var(--space-8);
   border-radius: var(--radius-xl);
@@ -467,7 +509,7 @@ body {
    FOOTER
    ======================================== */
 .main-footer {
-  background: var(--color-white);
+  background: #c7c8c2;
   padding: var(--space-6) 0;
   margin-top: var(--space-16);
   box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.1), 0 -1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -490,7 +532,7 @@ body {
 }
 
 .footer-menu a:hover {
-  color: var(--color-primary-500);
+  color: #695654;
 }
 
 /* ========================================
@@ -543,6 +585,23 @@ body {
 
   .search-filters {
     grid-template-columns: 1fr;
+  }
+
+  .search-buttons {
+    width: 100%;
+  }
+
+  .search-buttons .btn-primary {
+    max-width: none;
+    width: 100%;
+  }
+
+  .search-clear-buttons {
+    width: 100%;
+  }
+
+  .search-clear-buttons .btn-secondary {
+    width: calc(50% - var(--space-1));
   }
 
   .shifts-table {

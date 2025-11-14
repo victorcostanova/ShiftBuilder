@@ -1,23 +1,24 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from './api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
-  constructor(private router: Router) {}
+  constructor(private router: Router, private apiService: ApiService) {}
 
   /**
-   * Check if credentials match the fixed admin account
+   * Check if the current environment is localhost/internal network
    */
-  private isAdminAccount(username: string, password: string): boolean {
+  isInternalNetwork(): boolean {
+    const hostname = window.location.hostname;
+    const localHosts = ['localhost', '127.0.0.1', '::1'];
+
     return (
-      username === this.ADMIN_CREDENTIALS.username && password === this.ADMIN_CREDENTIALS.password
+      localHosts.includes(hostname) ||
+      /^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
     );
   }
 
@@ -70,12 +71,12 @@ export class AuthService {
   }
 
   /**
-   * Attempt to login with given credentials
+   * Attempt to login with given credentials (for regular users)
    */
-  login(
+  async login(
     username: string,
     password: string
-  ): { success: boolean; redirectUrl?: string; errors?: any } {
+  ): Promise<{ success: boolean; redirectUrl?: string; errors?: any }> {
     // Validate credentials first
     const validation = this.validateCredentials(username, password);
     if (!validation.valid) {
@@ -85,45 +86,93 @@ export class AuthService {
       };
     }
 
-    // Check hardcoded admin account first
-    if (this.isAdminAccount(username, password)) {
-      this.setUserSession(username);
-      return {
-        success: true,
-        redirectUrl: '/admin-home',
-      };
-    }
-
-    // Check localStorage admin account
-    const userData = this.getUserData(username);
-    if (userData && userData.isAdmin && userData.password === password) {
-      this.setUserSession(username);
-      return {
-        success: true,
-        redirectUrl: '/admin-home',
-      };
-    }
-
-    // Check regular user account
-    if (!userData) {
+    try {
+      const response = await firstValueFrom(this.apiService.login(username, password));
+      
+      // Check if user is admin (should use admin login)
+      if (response.user?.permission?.description === 'admin') {
       return {
         success: false,
-        errors: { username: 'User does not exist. Please register first.' },
+        errors: { username: 'Please use the admin login page to access administrator accounts.' },
       };
     }
 
-    if (userData.password !== password) {
+      // Save session with token
+      this.setUserSession(response.user.username, response.token, response.user);
+      
+      return {
+        success: true,
+        redirectUrl: '/worker-home',
+      };
+    } catch (error: any) {
+      const errorMessage = error.message || 'Login failed';
       return {
         success: false,
-        errors: { password: 'Incorrect password' },
-      };
-    }
-
-    this.setUserSession(username);
-    return {
-      success: true,
-      redirectUrl: '/worker-home',
+        errors: { 
+          username: errorMessage.includes('username') ? errorMessage : undefined,
+          password: errorMessage.includes('password') || errorMessage.includes('Invalid') ? errorMessage : undefined,
+          general: errorMessage
+        },
     };
+    }
+  }
+
+  /**
+   * Attempt to login as admin with given credentials
+   */
+  async adminLogin(
+    username: string,
+    password: string
+  ): Promise<{ success: boolean; redirectUrl?: string; errors?: any }> {
+    // Check if user is on internal network
+    if (!this.isInternalNetwork()) {
+      return {
+        success: false,
+        errors: { network: 'Admin access is only available from internal network (localhost).' },
+      };
+    }
+
+    // Validate credentials first
+    const validation = this.validateCredentials(username, password);
+    if (!validation.valid) {
+      return {
+        success: false,
+        errors: validation.errors,
+      };
+    }
+
+    try {
+      const response = await firstValueFrom(this.apiService.login(username, password));
+      
+      // Verify user is admin
+      if (response.user?.permission?.description !== 'admin') {
+      return {
+        success: false,
+        errors: { username: 'This account is not an administrator account.' },
+      };
+    }
+
+      // Save session with token
+      console.log('Admin login - User data:', response.user);
+      console.log('Admin login - Permission:', response.user.permission);
+      this.setUserSession(response.user.username, response.token, response.user);
+      
+      return {
+        success: true,
+        redirectUrl: '/admin-home',
+      };
+    } catch (error: any) {
+      const errorMessage = error.message || 'Login failed';
+      return {
+        success: false,
+        errors: { 
+          username: errorMessage.includes('username') || errorMessage.includes('Invalid') ? errorMessage : undefined,
+          password: errorMessage.includes('password') || errorMessage.includes('Invalid') ? errorMessage : undefined,
+          network: errorMessage.includes('network') ? errorMessage : undefined,
+          general: errorMessage
+        },
+    };
+    }
   }
 
   /**
@@ -135,14 +184,15 @@ export class AuthService {
       return false;
     }
 
-    if (username === this.ADMIN_CREDENTIALS.username) {
-      alert('Cannot reset admin account password');
-      return false;
-    }
-
     const userData = this.getUserData(username);
     if (!userData) {
       alert('User does not exist');
+      return false;
+    }
+
+    // Prevent reset of admin accounts
+    if (userData.isAdmin) {
+      alert('Cannot reset admin account password from this page');
       return false;
     }
 
@@ -177,11 +227,14 @@ export class AuthService {
   }
 
   /**
-   * Set user session
+   * Set user session with token
    */
-  private setUserSession(username: string): void {
+  setUserSession(username: string, token: string, userData: any): void {
     const sessionData = {
       username: username,
+      token: token,
+      userId: userData._id,
+      userData: userData,
       timestamp: new Date().toISOString(),
     };
     localStorage.setItem('userSession', JSON.stringify(sessionData));
@@ -209,24 +262,41 @@ export class AuthService {
    * Get redirect URL based on user type
    */
   private getRedirectUrl(username: string): string | null {
-    if (username === this.ADMIN_CREDENTIALS.username) {
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const sessionData = JSON.parse(session);
+      if (sessionData.userData?.permission?.description === 'admin') {
       return '/admin-home';
     }
-
-    const userData = this.getUserData(username);
-    if (userData && userData.isAdmin) {
-      return '/admin-home';
+      return '/worker-home';
     }
-
-    return userData ? '/worker-home' : null;
+    return null;
   }
 
   /**
-   * Get user data from localStorage
+   * Get user data from session or by fetching from API
    */
-  getUserData(username: string): any {
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    return users[username] || null;
+  getUserData(username?: string): any {
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const sessionData = JSON.parse(session);
+      if (!username || sessionData.username === username) {
+        return sessionData.userData || null;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get current user ID from session
+   */
+  getCurrentUserId(): string | null {
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const sessionData = JSON.parse(session);
+      return sessionData.userId || null;
+    }
+    return null;
   }
 
   /**
@@ -262,7 +332,13 @@ export class AuthService {
   /**
    * Logout user
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    try {
+      await firstValueFrom(this.apiService.logout());
+    } catch (error) {
+      // Continue with logout even if API call fails
+      console.error('Logout API error:', error);
+    }
     localStorage.removeItem('userSession');
     this.router.navigate(['/login']);
   }

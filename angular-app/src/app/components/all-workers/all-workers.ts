@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ApiService } from '../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-all-workers',
@@ -12,11 +14,6 @@ import { AuthService } from '../../services/auth';
   styleUrl: './all-workers.css',
 })
 export class AllWorkers implements OnInit {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
   currentUsername: string | null = null;
   allWorkers: any[] = [];
   filteredWorkers: any[] = [];
@@ -32,10 +29,11 @@ export class AllWorkers implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private apiService: ApiService,
     private router: Router
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication and admin status
     this.currentUsername = this.utilsService.checkAuth();
     if (!this.currentUsername) {
@@ -43,65 +41,72 @@ export class AllWorkers implements OnInit {
       return;
     }
 
-    // Verify user is admin (hardcoded or localStorage)
-    const userData = this.utilsService.getUserData(this.currentUsername);
-    const isHardcodedAdmin = this.currentUsername === this.ADMIN_CREDENTIALS.username;
-    const isLocalStorageAdmin = userData && userData.isAdmin;
-
-    if (!isHardcodedAdmin && !isLocalStorageAdmin) {
+    // Verify user is admin
+    const userData = this.authService.getUserData();
+    if (!userData || userData.permission?.description !== 'admin') {
       alert('Access denied. This page is for administrators only.');
       this.router.navigate(['/worker-home']);
       return;
     }
 
     // Load all workers
-    this.loadAllWorkers();
+    await this.loadAllWorkers();
   }
 
-  loadAllWorkers() {
-    this.allWorkers = this.getAllWorkers();
-    this.filteredWorkers = [...this.allWorkers];
-    this.displayWorkers();
-    this.updateStatistics();
+  async loadAllWorkers() {
+    try {
+      const users = await firstValueFrom(this.apiService.getAllUsers());
+      // Filter out admin users
+      this.allWorkers = users
+        .filter((user: any) => user.permission?.description !== 'admin')
+        .map((user: any) => {
+          // Calculate age if birthDate is available
+          const age = this.calculateAge(user.birthDate);
+          return {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstname,
+            lastName: user.lastname,
+            birthDate: user.birthDate || null,
+            age: age,
+            registeredAt: user.created || new Date().toISOString(),
+            fullName: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+          };
+        });
+      this.filteredWorkers = [...this.allWorkers];
+      this.displayWorkers();
+      this.updateStatistics();
+    } catch (error: any) {
+      console.error('Error loading workers:', error);
+      this.allWorkers = [];
+      this.filteredWorkers = [];
+    }
   }
 
-  getAllWorkers() {
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    const workers: any[] = [];
-
-    for (const [username, userData] of Object.entries(users)) {
-      // Skip fixed admin account
-      if (username === this.ADMIN_CREDENTIALS.username) continue;
-
-      // Calculate age
-      const age = this.calculateAge((userData as any).birthDate);
-
-      workers.push({
-        username: username,
-        email: (userData as any).email,
-        firstName: (userData as any).firstName,
-        lastName: (userData as any).lastName,
-        birthDate: (userData as any).birthDate,
-        age: age,
-        registeredAt: (userData as any).registeredAt,
-        fullName: `${(userData as any).firstName} ${(userData as any).lastName}`,
-      });
+  calculateAge(birthDate: string | Date | null | undefined): number {
+    if (!birthDate) {
+      return 0;
     }
 
-    return workers;
-  }
+    try {
+      const birth = new Date(birthDate);
+      if (isNaN(birth.getTime())) {
+        return 0;
+      }
 
-  calculateAge(birthDate: string): number {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+
+      return age;
+    } catch (error) {
+      return 0;
     }
-
-    return age;
   }
 
   displayWorkers() {
@@ -115,9 +120,9 @@ export class AllWorkers implements OnInit {
     );
   }
 
-  editWorker(username: string) {
-    // Navigate to edit profile page with worker username
-    this.router.navigate(['/edit-worker-profile'], { queryParams: { username: username } });
+  editWorker(userId: string) {
+    // Navigate to edit profile page with worker user ID
+    this.router.navigate(['/edit-worker-profile'], { queryParams: { id: userId } });
   }
 
   filterWorkers() {
@@ -164,12 +169,16 @@ export class AllWorkers implements OnInit {
   updateStatistics() {
     this.totalWorkers = this.filteredWorkers.length;
     let totalAge = 0;
+    let workersWithAge = 0;
 
     this.filteredWorkers.forEach((worker) => {
-      totalAge += worker.age;
+      if (worker.age > 0) {
+        totalAge += worker.age;
+        workersWithAge++;
+      }
     });
 
-    this.averageAge = this.totalWorkers > 0 ? Math.round(totalAge / this.totalWorkers) : 0;
+    this.averageAge = workersWithAge > 0 ? Math.round(totalAge / workersWithAge) : 0;
   }
 
   logout(event: Event) {

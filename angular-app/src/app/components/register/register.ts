@@ -3,6 +3,9 @@ import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
+import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -29,9 +32,14 @@ export class Register {
   lastNameError = '';
   birthDateError = '';
 
-  constructor(private utilsService: UtilsService, private router: Router) {}
+  constructor(
+    private utilsService: UtilsService,
+    private apiService: ApiService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  onSubmit() {
+  async onSubmit() {
     this.clearErrors();
 
     let hasError = false;
@@ -42,22 +50,10 @@ export class Register {
       hasError = true;
     }
 
-    // Check if email already exists
-    if (this.utilsService.isEmailExists(this.registerData.email)) {
-      this.emailError = 'Email already exists';
-      hasError = true;
-    }
-
     // Validate username
     const usernameValidation = this.utilsService.validateUsername(this.registerData.username);
     if (!usernameValidation.valid) {
       this.usernameError = usernameValidation.message;
-      hasError = true;
-    }
-
-    // Check if username already exists
-    if (this.utilsService.isUsernameExists(this.registerData.username)) {
-      this.usernameError = 'Username already exists';
       hasError = true;
     }
 
@@ -104,24 +100,44 @@ export class Register {
       return;
     }
 
-    // Create user data
+    // Create user data for API
     const userData = {
       email: this.registerData.email,
       username: this.registerData.username,
-      password: this.registerData.password,
-      firstName: this.registerData.firstName,
-      lastName: this.registerData.lastName,
-      birthDate: this.registerData.birthDate,
-      isAdmin: false,
-      registeredAt: new Date().toISOString(),
+      pass: this.registerData.password,
+      firstname: this.registerData.firstName,
+      lastname: this.registerData.lastName,
+      birthDate: this.registerData.birthDate || null,
     };
 
-    // Save user data
-    this.utilsService.saveUserData(this.registerData.username, userData);
-    this.utilsService.setUserSession(this.registerData.username);
+    try {
+      // Register user via API
+      const response = await firstValueFrom(this.apiService.createUser(userData));
+
+      // Auto-login after registration
+      const loginResponse = await firstValueFrom(
+        this.apiService.login(this.registerData.username, this.registerData.password)
+      );
+      
+      // Save session
+      this.authService.setUserSession(
+        loginResponse.user.username,
+        loginResponse.token,
+        loginResponse.user
+      );
 
     alert('Registration successful! Welcome to Manage My Shifts!');
     this.router.navigate(['/worker-home']);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Registration failed';
+      if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+        this.emailError = errorMessage;
+      } else if (errorMessage.includes('username') || errorMessage.includes('Username')) {
+        this.usernameError = errorMessage;
+      } else {
+        alert('Registration failed: ' + errorMessage);
+      }
+    }
   }
 
   private clearErrors() {

@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ShiftService } from '../../services/shift.service';
+import { ApiService } from '../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-filtershifts-worker',
@@ -12,13 +15,8 @@ import { AuthService } from '../../services/auth';
   styleUrl: './filtershifts-worker.css',
 })
 export class FiltershiftsWorker implements OnInit {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
   currentUsername: string | null = null;
-  targetWorkerUsername: string | null = null;
+  targetWorkerId: string | null = null;
   pageTitle = 'Worker Shifts';
   allShifts: any[] = [];
   filteredShifts: any[] = [];
@@ -36,11 +34,13 @@ export class FiltershiftsWorker implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private shiftService: ShiftService,
+    private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication and admin status
     this.currentUsername = this.utilsService.checkAuth();
     if (!this.currentUsername) {
@@ -48,54 +48,51 @@ export class FiltershiftsWorker implements OnInit {
       return;
     }
 
-    // Verify user is admin (hardcoded or localStorage)
-    const userData = this.utilsService.getUserData(this.currentUsername);
-    const isHardcodedAdmin = this.currentUsername === this.ADMIN_CREDENTIALS.username;
-    const isLocalStorageAdmin = userData && userData.isAdmin;
-
-    if (!isHardcodedAdmin && !isLocalStorageAdmin) {
+    // Verify user is admin
+    const userData = this.authService.getUserData();
+    if (!userData || userData.permission?.description !== 'admin') {
       alert('Access denied. This page is for administrators only.');
       this.router.navigate(['/worker-home']);
       return;
     }
 
-    // Get worker username from URL parameters
-    this.route.queryParams.subscribe((params) => {
-      this.targetWorkerUsername = params['username'];
-      if (!this.targetWorkerUsername) {
+    // Get worker ID from URL parameters (support both id and username for backward compatibility)
+    this.route.queryParams.subscribe(async (params) => {
+      this.targetWorkerId = params['id'] || params['username'];
+      if (!this.targetWorkerId) {
         alert('No worker specified. Redirecting to all workers page.');
         this.router.navigate(['/all-workers']);
         return;
       }
-      this.loadWorkerShifts();
+      await this.loadWorkerShifts();
     });
   }
 
-  loadWorkerShifts() {
+  async loadWorkerShifts() {
+    try {
     // Get worker data
-    const workerData = this.utilsService.getUserData(this.targetWorkerUsername!);
-
-    if (!workerData) {
-      alert('Worker not found. Redirecting to all workers page.');
-      this.router.navigate(['/all-workers']);
-      return;
-    }
+      const workerData = await firstValueFrom(this.apiService.getUserById(this.targetWorkerId!));
 
     // Update page title
-    this.pageTitle = `${workerData.firstName} ${workerData.lastName} - Shifts`;
+      this.pageTitle = `${workerData.firstname || ''} ${workerData.lastname || ''} - Shifts`.trim();
 
     // Get worker shifts
-    this.allShifts = this.utilsService.getUserShifts(this.targetWorkerUsername!);
-
-    // Add worker name to each shift
-    this.allShifts = this.allShifts.map((shift) => ({
-      ...shift,
-      workerName: `${workerData.firstName} ${workerData.lastName}`,
-    }));
+      const shifts = await firstValueFrom(this.shiftService.getUserShifts(this.targetWorkerId!));
+      this.allShifts = shifts.map((shift: any) => {
+        const converted = this.shiftService.convertShiftFromApi(shift);
+        return {
+          ...converted,
+          workerName: `${workerData.firstname || ''} ${workerData.lastname || ''}`.trim(),
+        };
+      });
 
     this.filteredShifts = [...this.allShifts];
     this.displayShifts();
     this.updateStatistics();
+    } catch (error: any) {
+      alert('Worker not found: ' + (error.message || 'Unknown error'));
+      this.router.navigate(['/all-workers']);
+    }
   }
 
   displayShifts() {

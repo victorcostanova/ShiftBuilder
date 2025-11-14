@@ -3,6 +3,9 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ShiftService } from '../../services/shift.service';
+import { ApiService } from '../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-admin-home',
@@ -11,11 +14,6 @@ import { AuthService } from '../../services/auth';
   styleUrl: './admin-home.css',
 })
 export class AdminHome implements OnInit {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
   currentUsername: string | null = null;
   workerOfMonth = 'No data available';
   workerShiftCount = '0 shifts';
@@ -26,10 +24,12 @@ export class AdminHome implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private shiftService: ShiftService,
+    private apiService: ApiService,
     private router: Router
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication and admin status
     this.currentUsername = this.utilsService.checkAuth();
     if (!this.currentUsername) {
@@ -37,60 +37,69 @@ export class AdminHome implements OnInit {
       return;
     }
 
-    // Verify user is admin (hardcoded or localStorage)
-    const userData = this.utilsService.getUserData(this.currentUsername);
-    const isHardcodedAdmin = this.currentUsername === this.ADMIN_CREDENTIALS.username;
-    const isLocalStorageAdmin = userData && userData.isAdmin;
-
-    if (!isHardcodedAdmin && !isLocalStorageAdmin) {
+    // Verify user is admin using API data
+    const userData = this.authService.getUserData();
+    console.log('Admin Home - User data:', userData);
+    console.log('Admin Home - Permission:', userData?.permission);
+    
+    if (!userData || userData.permission?.description !== 'admin') {
+      console.error('Admin access denied:', {
+        hasUserData: !!userData,
+        permission: userData?.permission,
+        description: userData?.permission?.description
+      });
       alert('Access denied. This page is for administrators only.');
       this.router.navigate(['/worker-home']);
       return;
     }
 
     // Load dashboard data
-    this.loadDashboardStatistics();
+    await this.loadDashboardStatistics();
   }
 
-  loadDashboardStatistics() {
-    const allShiftsData = this.getAllShiftsForAllWorkers();
+  async loadDashboardStatistics() {
+    const allShiftsData = await this.getAllShiftsForAllWorkers();
 
     this.calculateWorkerOfMonth(allShiftsData);
     this.displayWeeklyShifts(allShiftsData);
     this.calculateHighestEarningMonth(allShiftsData);
   }
 
-  getAllUsers() {
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    return Object.entries(users)
-      .filter(([username, userData]: [string, any]) => username !== this.ADMIN_CREDENTIALS.username) // Exclude fixed admin account
-      .map(([username, userData]: [string, any]) => ({
-        username,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        fullName: `${userData.firstName} ${userData.lastName}`,
+  async getAllUsers() {
+    try {
+      const users = await firstValueFrom(this.apiService.getAllUsers());
+      return users
+        .filter((user: any) => user.permission?.description !== 'admin')
+        .map((user: any) => ({
+          _id: user._id,
+          username: user.username,
+          firstName: user.firstname,
+          lastName: user.lastname,
+          fullName: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
       }));
+    } catch (error) {
+      console.error('Error loading users:', error);
+      return [];
+    }
   }
 
-  getAllShiftsForAllWorkers() {
-    const allShifts: any[] = [];
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    for (const [username, userData] of Object.entries(users)) {
-      // Skip fixed admin account
-      if (username === this.ADMIN_CREDENTIALS.username) continue;
-
-      const userShifts = this.utilsService.getUserShifts(username);
-      userShifts.forEach((shift: any) => {
-        allShifts.push({
-          ...shift,
-          username: username,
-          workerName: `${(userData as any).firstName} ${(userData as any).lastName}`,
-        });
+  async getAllShiftsForAllWorkers() {
+    try {
+      const shifts = await firstValueFrom(this.shiftService.getAllShifts());
+      return shifts.map((shift: any) => {
+        const converted = this.shiftService.convertShiftFromApi(shift);
+        return {
+          ...converted,
+          username: shift.userId?.username || shift.userId?._id || '',
+          workerName: shift.userId
+            ? `${shift.userId.firstname || ''} ${shift.userId.lastname || ''}`.trim()
+            : 'Unknown',
+        };
       });
+    } catch (error) {
+      console.error('Error loading shifts:', error);
+      return [];
     }
-
-    return allShifts;
   }
 
   calculateWorkerOfMonth(allShifts: any[]) {

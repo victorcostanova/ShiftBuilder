@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ApiService } from '../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-edit-profile',
@@ -13,6 +15,8 @@ import { AuthService } from '../../services/auth';
 })
 export class EditProfile implements OnInit {
   currentUsername: string | null = null;
+  currentUserId: string | null = null;
+  isAdmin: boolean = false;
 
   profileData = {
     email: '',
@@ -35,42 +39,60 @@ export class EditProfile implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private apiService: ApiService,
     private router: Router
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication
     this.currentUsername = this.utilsService.checkAuth();
-    if (!this.currentUsername) {
+    this.currentUserId = this.authService.getCurrentUserId();
+    if (!this.currentUsername || !this.currentUserId) {
       this.router.navigate(['/login']);
       return;
     }
 
+    // Check if user is admin
+    const userData = this.authService.getUserData();
+    this.isAdmin = userData?.permission?.description === 'admin';
+
     // Load current user data
-    this.loadUserData();
+    await this.loadUserData();
   }
 
-  loadUserData() {
-    const userData = this.utilsService.getUserData(this.currentUsername!);
-    if (!userData) {
-      alert('User data not found!');
-      this.router.navigate(['/login']);
-      return;
+  async loadUserData() {
+    try {
+      const userData = await firstValueFrom(this.apiService.getUserById(this.currentUserId!));
+      
+      // Format birthDate for input type="date" (YYYY-MM-DD)
+      let formattedBirthDate = '';
+      if (userData.birthDate) {
+        const birthDate = new Date(userData.birthDate);
+        if (!isNaN(birthDate.getTime())) {
+          const year = birthDate.getFullYear();
+          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+          const day = String(birthDate.getDate()).padStart(2, '0');
+          formattedBirthDate = `${year}-${month}-${day}`;
+        }
     }
 
     // Populate form with current user data
     this.profileData = {
-      email: userData.email,
-      username: userData.username,
-      password: userData.password,
-      confirmPassword: userData.password,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      birthDate: userData.birthDate,
-    };
+        email: userData.email || '',
+        username: userData.username || '',
+        password: '', // Don't load password
+        confirmPassword: '',
+        firstName: userData.firstname || '',
+        lastName: userData.lastname || '',
+        birthDate: formattedBirthDate,
+      };
+    } catch (error: any) {
+      alert('Error loading user data: ' + (error.message || 'Unknown error'));
+      this.router.navigate(['/login']);
+    }
   }
 
-  onSubmit() {
+  async onSubmit() {
     this.clearErrors();
 
     let hasError = false;
@@ -86,13 +108,6 @@ export class EditProfile implements OnInit {
     if (!usernameValidation.valid) {
       this.usernameError = usernameValidation.message;
       hasError = true;
-    } else if (this.profileData.username !== this.currentUsername) {
-      // Check if new username already exists
-      const existingUser = this.utilsService.getUserData(this.profileData.username);
-      if (existingUser) {
-        this.usernameError = 'Username already exists';
-        hasError = true;
-      }
     }
 
     // Validate password
@@ -138,49 +153,55 @@ export class EditProfile implements OnInit {
       return;
     }
 
-    // Get current user data
-    const currentUserData = this.utilsService.getUserData(this.currentUsername!);
+    if (!this.currentUserId) {
+      alert('User ID not found');
+      return;
+    }
 
-    // Update user data
-    const updatedUserData = {
-      ...currentUserData,
+    try {
+      // Prepare update data
+      const updateData: any = {
       email: this.profileData.email,
       username: this.profileData.username,
-      password: this.profileData.password,
-      firstName: this.profileData.firstName,
-      lastName: this.profileData.lastName,
-      birthDate: this.profileData.birthDate,
-      updatedAt: new Date().toISOString(),
-    };
+        firstname: this.profileData.firstName,
+        lastname: this.profileData.lastName,
+        birthDate: this.profileData.birthDate || null,
+      };
 
-    // If username changed, need to update localStorage keys
+      // Only update password if it was changed
+      if (this.profileData.password && this.profileData.password.trim()) {
+        updateData.pass = this.profileData.password;
+      }
+
+      // Update user via API
+      await firstValueFrom(this.apiService.updateUser(this.currentUserId, updateData));
+
+      // Update session if username changed
     if (this.profileData.username !== this.currentUsername) {
-      // Get all users
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-      // Remove old username
-      delete users[this.currentUsername!];
-
-      // Add new username
-      users[this.profileData.username] = updatedUserData;
-      localStorage.setItem('users', JSON.stringify(users));
-
-      // Move shifts to new username
-      const shifts = this.utilsService.getUserShifts(this.currentUsername!);
-      localStorage.removeItem(`shifts_${this.currentUsername}`);
-      this.utilsService.saveUserShifts(this.profileData.username, shifts);
-
-      // Update session
-      this.utilsService.clearUserSession();
-      this.utilsService.setUserSession(this.profileData.username);
+        // Reload user data to get updated info
+        const updatedUser = await firstValueFrom(this.apiService.getUserById(this.currentUserId));
+        const session = localStorage.getItem('userSession');
+        if (session) {
+          const sessionData = JSON.parse(session);
+          sessionData.username = updatedUser.username;
+          sessionData.userData = updatedUser;
+          localStorage.setItem('userSession', JSON.stringify(sessionData));
+        }
       this.currentUsername = this.profileData.username;
-    } else {
-      // Just update the user data
-      this.utilsService.saveUserData(this.currentUsername!, updatedUserData);
     }
 
     alert('Profile updated successfully!');
     this.router.navigate(['/worker-home']);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Update failed';
+      if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+        this.emailError = errorMessage;
+      } else if (errorMessage.includes('username') || errorMessage.includes('Username')) {
+        this.usernameError = errorMessage;
+      } else {
+        alert('Error updating profile: ' + errorMessage);
+      }
+    }
   }
 
   logout(event: Event) {

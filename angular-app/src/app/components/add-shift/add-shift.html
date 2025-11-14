@@ -1,17 +1,21 @@
 <header class="main-header">
-  <div class="logo">
-    <h1>Manage My Shifts</h1>
-  </div>
   <nav class="top-menu">
     <ul>
-      <li><a routerLink="/worker-home">My Shifts</a></li>
+      <li><a routerLink="/worker-home" routerLinkActive="active">My Shifts</a></li>
       <li><a routerLink="/edit-profile">Edit Profile</a></li>
-      <li class="user-greeting">
-        Hello, <span>{{ currentUsername }}</span>
-      </li>
+      <li *ngIf="isAdmin"><a routerLink="/admin-home">Admin Panel</a></li>
       <li><a href="#" (click)="logout($event)">Logout</a></li>
     </ul>
   </nav>
+  <div class="logo">
+    <h1>Manage My Shifts</h1>
+    <div class="user-info">
+      <span class="admin-badge">{{ isAdmin ? 'Administrator' : 'Worker' }}</span>
+      <div class="user-greeting">
+        Hello, <span>{{ currentUsername }}</span>
+      </div>
+    </div>
+  </div>
 </header>
 
 <main class="main-content">
@@ -101,7 +105,6 @@
             name="shiftSlug"
             [(ngModel)]="shiftData.slug"
             #shiftSlug="ngModel"
-            [disabled]="isEditing"
             placeholder="e.g., morning-shift-jan-15"
             required
           />

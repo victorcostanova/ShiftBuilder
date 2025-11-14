@@ -1,0 +1,128 @@
+<div class="container">
+  <div class="auth-card">
+    <div class="logo">
+      <h1>Manage My Shifts</h1>
+      <h2>Administrator Registration</h2>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="auth-form">
+      @if (networkError) {
+      <div class="network-warning">
+        <span class="error-message">{{ networkError }}</span>
+      </div>
+      }
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="registerData.email"
+          #email="ngModel"
+          required
+        />
+        @if (emailError) {
+        <span class="error-message">{{ emailError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username (min 6 chars, letters, numbers & special char)</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [(ngModel)]="registerData.username"
+          #username="ngModel"
+          required
+        />
+        @if (usernameError) {
+        <span class="error-message">{{ usernameError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password (min 6 characters)</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="registerData.password"
+          #password="ngModel"
+          required
+        />
+        @if (passwordError) {
+        <span class="error-message">{{ passwordError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="registerData.confirmPassword"
+          #confirmPassword="ngModel"
+          required
+        />
+        @if (confirmPasswordError) {
+        <span class="error-message">{{ confirmPasswordError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="firstName">First Name (min 2 letters)</label>
+        <input
+          type="text"
+          id="firstName"
+          name="firstName"
+          [(ngModel)]="registerData.firstName"
+          #firstName="ngModel"
+          required
+        />
+        @if (firstNameError) {
+        <span class="error-message">{{ firstNameError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Last Name (min 2 letters)</label>
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          [(ngModel)]="registerData.lastName"
+          #lastName="ngModel"
+          required
+        />
+        @if (lastNameError) {
+        <span class="error-message">{{ lastNameError }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="birthDate">Birth Date (Age 6-130)</label>
+        <input
+          type="date"
+          id="birthDate"
+          name="birthDate"
+          [(ngModel)]="registerData.birthDate"
+          #birthDate="ngModel"
+          required
+        />
+        @if (birthDateError) {
+        <span class="error-message">{{ birthDateError }}</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register as Administrator</button>
+
+      <div class="auth-links">
+        <p>Already have an admin account? <a routerLink="/admin-login">Login here</a></p>
+        <p>Regular user? <a routerLink="/register">Register here</a></p>
+      </div>
+    </form>
+  </div>
+</div>

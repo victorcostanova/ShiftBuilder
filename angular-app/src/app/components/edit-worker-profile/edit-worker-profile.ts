@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ApiService } from '../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-edit-worker-profile',
@@ -12,13 +14,8 @@ import { AuthService } from '../../services/auth';
   styleUrl: './edit-worker-profile.css',
 })
 export class EditWorkerProfile implements OnInit {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
   currentUsername: string | null = null;
-  targetWorkerUsername: string | null = null;
+  targetWorkerId: string | null = null;
 
   workerData = {
     email: '',
@@ -39,11 +36,12 @@ export class EditWorkerProfile implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication and admin status
     this.currentUsername = this.utilsService.checkAuth();
     if (!this.currentUsername) {
@@ -51,50 +49,58 @@ export class EditWorkerProfile implements OnInit {
       return;
     }
 
-    // Verify user is admin (hardcoded or localStorage)
-    const userData = this.utilsService.getUserData(this.currentUsername);
-    const isHardcodedAdmin = this.currentUsername === this.ADMIN_CREDENTIALS.username;
-    const isLocalStorageAdmin = userData && userData.isAdmin;
-
-    if (!isHardcodedAdmin && !isLocalStorageAdmin) {
+    // Verify user is admin
+    const userData = this.authService.getUserData();
+    if (!userData || userData.permission?.description !== 'admin') {
       alert('Access denied. This page is for administrators only.');
       this.router.navigate(['/worker-home']);
       return;
     }
 
-    // Get worker username from URL parameters
-    this.route.queryParams.subscribe((params) => {
-      this.targetWorkerUsername = params['username'];
-      if (!this.targetWorkerUsername) {
+    // Get worker ID from URL parameters (support both id and username for backward compatibility)
+    this.route.queryParams.subscribe(async (params) => {
+      this.targetWorkerId = params['id'] || params['username'];
+      if (!this.targetWorkerId) {
         alert('No worker specified. Redirecting to all workers page.');
         this.router.navigate(['/all-workers']);
         return;
       }
-      this.loadWorkerData();
+      await this.loadWorkerData();
     });
   }
 
-  loadWorkerData() {
-    const workerData = this.utilsService.getUserData(this.targetWorkerUsername!);
+  async loadWorkerData() {
+    try {
+      const workerData = await firstValueFrom(this.apiService.getUserById(this.targetWorkerId!));
 
-    if (!workerData) {
-      alert('Worker not found. Redirecting to all workers page.');
-      this.router.navigate(['/all-workers']);
-      return;
+      // Format birthDate for input type="date" (YYYY-MM-DD)
+      let formattedBirthDate = '';
+      if (workerData.birthDate) {
+        const birthDate = new Date(workerData.birthDate);
+        if (!isNaN(birthDate.getTime())) {
+          const year = birthDate.getFullYear();
+          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+          const day = String(birthDate.getDate()).padStart(2, '0');
+          formattedBirthDate = `${year}-${month}-${day}`;
+        }
     }
 
     // Populate form fields
     this.workerData = {
       email: workerData.email || '',
-      password: workerData.password || '',
-      confirmPassword: workerData.password || '',
-      firstName: workerData.firstName || '',
-      lastName: workerData.lastName || '',
-      birthDate: workerData.birthDate || '',
-    };
+        password: '', // Don't load password
+        confirmPassword: '',
+        firstName: workerData.firstname || '',
+        lastName: workerData.lastname || '',
+        birthDate: formattedBirthDate,
+      };
+    } catch (error: any) {
+      alert('Worker not found: ' + (error.message || 'Unknown error'));
+      this.router.navigate(['/all-workers']);
+  }
   }
 
-  onSubmit() {
+  async onSubmit() {
     this.clearErrors();
 
     let hasError = false;
@@ -148,49 +154,67 @@ export class EditWorkerProfile implements OnInit {
       return;
     }
 
-    // Update worker data
-    const updatedWorkerData = {
-      email: this.workerData.email,
-      username: this.targetWorkerUsername,
-      password: this.workerData.password,
-      firstName: this.workerData.firstName,
-      lastName: this.workerData.lastName,
-      birthDate: this.workerData.birthDate,
-      isAdmin: false, // Workers are never admin
-      registeredAt: this.utilsService.getUserData(this.targetWorkerUsername!).registeredAt, // Keep original registration date
-    };
+    if (!this.targetWorkerId) {
+      alert('Worker ID not found');
+      return;
+    }
 
-    this.utilsService.saveUserData(this.targetWorkerUsername!, updatedWorkerData);
+    try {
+      // Prepare update data
+      const updateData: any = {
+      email: this.workerData.email,
+        firstname: this.workerData.firstName,
+        lastname: this.workerData.lastName,
+        birthDate: this.workerData.birthDate || null,
+      };
+
+      // Only update password if it was changed
+      if (this.workerData.password && this.workerData.password.trim()) {
+        updateData.pass = this.workerData.password;
+      }
+
+      // Update worker via API
+      await firstValueFrom(this.apiService.updateUser(this.targetWorkerId, updateData));
 
     alert('Worker profile updated successfully!');
     this.router.navigate(['/admin-home']);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Update failed';
+      if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+        this.emailError = errorMessage;
+      } else {
+        alert('Error updating worker profile: ' + errorMessage);
+      }
+    }
   }
 
   filterWorkerShifts() {
     // Navigate to worker shifts filter page
     this.router.navigate(['/filtershifts-worker'], {
-      queryParams: { username: this.targetWorkerUsername },
+      queryParams: { id: this.targetWorkerId },
     });
   }
 
-  deleteWorker() {
+  async deleteWorker() {
     if (
-      confirm(
-        `Are you sure you want to delete worker "${this.targetWorkerUsername}"? This action cannot be undone.`
+      !confirm(
+        `Are you sure you want to delete this worker? This action cannot be undone.`
       )
     ) {
-      // Get all users
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      return;
+    }
 
-      // Delete worker data
-      delete users[this.targetWorkerUsername!];
-      localStorage.setItem('users', JSON.stringify(users));
+    if (!this.targetWorkerId) {
+      alert('Worker ID not found');
+      return;
+    }
 
-      // Delete worker shifts
-      localStorage.removeItem(`shifts_${this.targetWorkerUsername}`);
-
+    try {
+      await firstValueFrom(this.apiService.deleteUser(this.targetWorkerId));
       alert('Worker deleted successfully!');
       this.router.navigate(['/admin-home']);
+    } catch (error: any) {
+      alert('Error deleting worker: ' + (error.message || 'Unknown error'));
     }
   }
 

@@ -1,0 +1,47 @@
+<div class="container">
+  <div class="auth-card">
+    <div class="logo">
+      <h1>Manage My Shifts</h1>
+      <h2>Administrator Login</h2>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="auth-form">
+      <div class="network-warning" *ngIf="networkError">
+        <span class="error-message">{{ networkError }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [(ngModel)]="loginData.username"
+          #username="ngModel"
+          required
+        />
+        <span class="error-message" *ngIf="usernameError">{{ usernameError }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="loginData.password"
+          #password="ngModel"
+          required
+        />
+        <span class="error-message" *ngIf="passwordError">{{ passwordError }}</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Login as Administrator</button>
+
+      <div class="auth-links">
+        <p>Need to register as admin? <a routerLink="/admin-register">Register here</a></p>
+        <p>Regular user? <a routerLink="/login">Login here</a></p>
+      </div>
+    </form>
+  </div>
+</div>

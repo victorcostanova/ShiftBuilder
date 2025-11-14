@@ -21,28 +21,23 @@ export class Login {
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  onSubmit() {
+  async onSubmit() {
     this.clearErrors();
 
-    const result = this.authService.login(this.loginData.username, this.loginData.password);
+    const result = await this.authService.login(this.loginData.username, this.loginData.password);
 
     if (result.success) {
       this.router.navigate([result.redirectUrl]);
     } else {
-      if (result.errors.username) {
+      if (result.errors?.username) {
         this.usernameError = result.errors.username;
       }
-      if (result.errors.password) {
+      if (result.errors?.password) {
         this.passwordError = result.errors.password;
       }
-    }
-  }
-
-  resetPassword(event: Event) {
-    event.preventDefault();
-    if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
-      this.authService.resetAllData();
-      alert('All data has been reset. Please refresh the page.');
+      if (result.errors?.general && !this.usernameError && !this.passwordError) {
+        this.usernameError = result.errors.general;
+      }
     }
   }
 

@@ -8,6 +8,15 @@ export const routes: Routes = [
     loadComponent: () => import('./components/register/register').then((m) => m.Register),
   },
   {
+    path: 'admin-login',
+    loadComponent: () => import('./components/admin-login/admin-login').then((m) => m.AdminLogin),
+  },
+  {
+    path: 'admin-register',
+    loadComponent: () =>
+      import('./components/admin-register/admin-register').then((m) => m.AdminRegister),
+  },
+  {
     path: 'worker-home',
     loadComponent: () => import('./components/worker-home/worker-home').then((m) => m.WorkerHome),
   },

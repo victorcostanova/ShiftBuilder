@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ShiftService } from '../../services/shift.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-all-shifts',
@@ -12,11 +14,6 @@ import { AuthService } from '../../services/auth';
   styleUrl: './all-shifts.css',
 })
 export class AllShifts implements OnInit {
-  private readonly ADMIN_CREDENTIALS = {
-    username: 'admin123!',
-    password: 'admin123',
-  };
-
   currentUsername: string | null = null;
   allShifts: any[] = [];
   filteredShifts: any[] = [];
@@ -34,10 +31,11 @@ export class AllShifts implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private shiftService: ShiftService,
     private router: Router
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication and admin status
     this.currentUsername = this.utilsService.checkAuth();
     if (!this.currentUsername) {
@@ -45,47 +43,39 @@ export class AllShifts implements OnInit {
       return;
     }
 
-    // Verify user is admin (hardcoded or localStorage)
-    const userData = this.utilsService.getUserData(this.currentUsername);
-    const isHardcodedAdmin = this.currentUsername === this.ADMIN_CREDENTIALS.username;
-    const isLocalStorageAdmin = userData && userData.isAdmin;
-
-    if (!isHardcodedAdmin && !isLocalStorageAdmin) {
+    // Verify user is admin
+    const userData = this.authService.getUserData();
+    if (!userData || userData.permission?.description !== 'admin') {
       alert('Access denied. This page is for administrators only.');
       this.router.navigate(['/worker-home']);
       return;
     }
 
     // Load all shifts
-    this.loadAllShifts();
+    await this.loadAllShifts();
   }
 
-  loadAllShifts() {
-    this.allShifts = this.getAllShiftsForAllWorkers();
+  async loadAllShifts() {
+    try {
+      const shifts = await firstValueFrom(this.shiftService.getAllShifts());
+      this.allShifts = shifts.map((shift: any) => {
+        const converted = this.shiftService.convertShiftFromApi(shift);
+        return {
+          ...converted,
+          username: shift.userId?.username || shift.userId?._id || '',
+          workerName: shift.userId
+            ? `${shift.userId.firstname || ''} ${shift.userId.lastname || ''}`.trim()
+            : 'Unknown',
+        };
+      });
     this.filteredShifts = [...this.allShifts];
     this.displayShifts();
     this.updateStatistics();
-  }
-
-  getAllShiftsForAllWorkers() {
-    const shifts: any[] = [];
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    for (const [username, userData] of Object.entries(users)) {
-      // Skip fixed admin account
-      if (username === this.ADMIN_CREDENTIALS.username) continue;
-
-      const userShifts = this.utilsService.getUserShifts(username);
-      userShifts.forEach((shift: any) => {
-        shifts.push({
-          ...shift,
-          username: username,
-          workerName: `${(userData as any).firstName} ${(userData as any).lastName}`,
-        });
-      });
+    } catch (error: any) {
+      console.error('Error loading shifts:', error);
+      this.allShifts = [];
+      this.filteredShifts = [];
     }
-
-    return shifts;
   }
 
   displayShifts() {

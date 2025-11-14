@@ -1,266 +1,370 @@
-# Manage My Shifts - Shift Tracking Application
+# Shift Builder
 
-A full-stack client-side application for tracking work shifts and calculating earnings. Built with HTML, CSS, and JavaScript using localStorage for data persistence.
+A full-stack web application for managing work shifts, designed to help administrators manage workers, and allow workers to view and manage their schedules.
 
-## Features
+## 📋 Table of Contents
 
-### User Management
+- [About the Project](#about-the-project)
+- [Technologies Used](#technologies-used)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Running the Application](#running-the-application)
+- [API Endpoints](#api-endpoints)
+- [Database Setup](#database-setup)
 
-- **User Registration** with comprehensive validation
+## 🎯 About the Project
 
-  - Email validation
-  - Username requirements (min 6 chars, letters, numbers, special character)
-  - Password requirements (min 6 chars)
-  - Name validation (min 2 letters)
-  - Age restriction (18-65 years)
+Shift Builder is a shift management system that allows:
 
-- **User Authentication**
+- **Workers** to register, view their assigned shifts, filter shifts by date, and manage their profiles
+- **Administrators** to create and manage shifts, view all workers, edit worker profiles, and oversee the entire system
 
-  - Secure login system
-  - 60-minute session management
-  - Password reset (deletes all user data)
+The application uses a secure authentication system with role-based access control, ensuring that workers can only access their own data while administrators have full system access.
 
-- **Profile Management**
-  - Edit user information
-  - Update credentials
-  - Username change support with data migration
+## 🛠️ Technologies Used
 
-### Shift Management
+### Backend
 
-- **Add Shifts**
+- **Node.js** - JavaScript runtime environment
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database for data storage
+- **Mongoose** - MongoDB object modeling tool
+- **JWT (JSON Web Tokens)** - For secure authentication
+- **bcryptjs** - For password encryption
+- **dotenv** - For environment variable management
 
-  - Date, start time, end time
-  - Hourly wage tracking
-  - Workplace selection
-  - Unique shift names (slugs)
-  - Optional comments/notes
-  - Loading spinner during save
+### Frontend
 
-- **Edit Shifts**
+- **Angular** - Modern web framework (v20)
+- **TypeScript** - Typed superset of JavaScript
+- **RxJS** - Reactive programming library
+- **Angular Router** - For navigation and routing
 
-  - Modify existing shift details
-  - Prevent duplicate shift names
-  - Preserve shift history
+## ✨ Features
 
-- **Delete Shifts**
+- User authentication and authorization (JWT-based)
+- Role-based access control (Admin and Regular User)
+- Shift creation, viewing, editing, and deletion
+- Worker profile management
+- Shift filtering and search capabilities
+- Comment system for shifts
+- Secure password hashing
+- Token-based session management
 
-  - Confirmation before deletion
-  - Permanent removal from records
-
-- **View Shifts**
-  - Sortable table display
-  - Automatic profit calculation
-  - Date-based organization
-
-### Search & Filter
-
-- **Search by shift name** - Find shifts by name, workplace, or comments
-- **Date range filtering** - Filter shifts between specific dates
-- **Clear filters** - Reset all search criteria
-
-### Statistics
-
-- **Highest Earning Month** - Automatically calculated and displayed
-- **Total Profit per Shift** - Real-time calculation based on hours worked and wage
-
-### Responsive Design
-
-- Mobile-friendly interface
-- Tablet and desktop support
-- Touch-optimized interactions
-
-## File Structure
+## 📁 Project Structure
 
 ```
-capstone_1/
-├── index.html              # Login page (entry point)
-├── register.html           # User registration
-├── worker-home.html         # Main dashboard with shifts table
-├── add-shift.html         # Add/edit shift form
-├── edit-profile.html      # User profile editor
-├── styles.css             # Main stylesheet (responsive)
-├── utils.js               # Utility functions and validation
-├── auth.js                # Login functionality
-├── register.js            # Registration functionality
-├── worker-home.js          # Home page and shift display
-├── shift-form.js          # Shift creation/editing
-├── edit-profile.js        # Profile editing
-└── README.md              # Documentation
+shift-builder/
+│
+├── server/                          # Backend server
+│   ├── config/
+│   │   └── database.js             # MongoDB connection configuration
+│   ├── middleware/
+│   │   └── auth.js                 # Authentication middleware
+│   ├── models/                     # Database models (schemas)
+│   │   ├── User.js                 # User model
+│   │   ├── Shift.js                # Shift model
+│   │   ├── Comment.js              # Comment model
+│   │   └── Permission.js            # Permission model
+│   ├── modules/                    # Feature modules
+│   │   ├── User/
+│   │   │   ├── Controller.js       # User business logic
+│   │   │   ├── Route.js            # User API routes
+│   │   │   └── Module.js           # User module exports
+│   │   ├── Shift/
+│   │   │   ├── Controller.js       # Shift business logic
+│   │   │   ├── Route.js            # Shift API routes
+│   │   │   └── Module.js           # Shift module exports
+│   │   ├── Comment/
+│   │   │   ├── Controller.js       # Comment business logic
+│   │   │   ├── Route.js            # Comment API routes
+│   │   │   └── Module.js           # Comment module exports
+│   │   └── Permission/
+│   │       ├── Controller.js       # Permission business logic
+│   │       ├── Route.js            # Permission API routes
+│   │       └── Module.js           # Permission module exports
+│   ├── scripts/                    # Utility scripts
+│   │   └── initPermissions.js      # Initialize database permissions
+│   ├── utils/                      # Utility functions
+│   │   ├── auth.js                 # JWT token utilities
+│   │   └── tokenBlacklist.js       # Token blacklist management
+│   ├── server.js                   # Main server entry point
+│   └── package.json                # Server dependencies
+│
+└── angular-app/                     # Frontend application
+    ├── src/
+    │   ├── app/
+    │   │   ├── components/         # Angular components (pages)
+    │   │   │   ├── login/          # Login page
+    │   │   │   ├── register/       # Registration page
+    │   │   │   ├── admin-login/    # Admin login page
+    │   │   │   ├── admin-register/ # Admin registration page
+    │   │   │   ├── worker-home/    # Worker dashboard
+    │   │   │   ├── admin-home/     # Admin dashboard
+    │   │   │   ├── add-shift/     # Add shift form
+    │   │   │   ├── all-shifts/     # View all shifts
+    │   │   │   ├── all-workers/    # View all workers
+    │   │   │   ├── edit-profile/   # Edit own profile
+    │   │   │   ├── edit-worker-profile/ # Edit worker profile (admin)
+    │   │   │   └── filtershifts-worker/ # Filter shifts
+    │   │   ├── services/           # Angular services
+    │   │   │   ├── auth.ts         # Authentication service
+    │   │   │   ├── api.service.ts  # API communication service
+    │   │   │   ├── shift.service.ts # Shift management service
+    │   │   │   ├── comment.service.ts # Comment service
+    │   │   │   ├── shift.ts        # Shift type definitions
+    │   │   │   └── utils.ts        # Utility functions
+    │   │   ├── app.routes.ts       # Application routing
+    │   │   ├── app.config.ts       # App configuration
+    │   │   └── app.ts              # Main app component
+    │   ├── assets/                 # Static assets (images, etc.)
+    │   ├── index.html              # Main HTML file
+    │   ├── main.ts                 # Application entry point
+    │   └── styles.css              # Global styles
+    ├── angular.json                # Angular configuration
+    └── package.json                # Frontend dependencies
 ```
 
-## How to Use
+## 📦 Prerequisites
 
-### Getting Started
+Before you begin, ensure you have the following installed on your system:
 
-1. **Open the Application**
+- **Node.js** (v18 or higher) - [Download Node.js](https://nodejs.org/)
+- **npm** (comes with Node.js) or **yarn**
+- **MongoDB** - [Download MongoDB](https://www.mongodb.com/try/download/community)
+  - Make sure MongoDB is running on your system
+  - Default connection: `mongodb://localhost:27017`
 
-   - Open `index.html` in a web browser
-   - No server required - runs entirely in the browser
+## 🚀 Installation & Setup
 
-2. **Register a New Account**
+### 1. Clone the Repository
 
-   - Click "Register here" on the login page
-   - Fill in all required fields:
-     - Valid email address
-     - Username (min 6 chars with letters, numbers, and special char)
-     - Password (min 6 chars) and confirmation
-     - First and last name (min 2 letters each)
-     - Birth date (age must be 18-65)
-   - Click "Register" button
+```bash
+git clone <repository-url>
+cd shift-builder
+```
 
-3. **Login**
-   - Enter your username and password
-   - Click "Login" button
-   - Session lasts 60 minutes
+### 2. Backend Setup
 
-### Managing Shifts
+Navigate to the server directory and install dependencies:
 
-1. **Add a Shift**
+```bash
+cd server
+npm install
+```
 
-   - Click the "+ Add Shift" button on the home page
-   - Fill in shift details:
-     - Date of the shift
-     - Start and end times
-     - Hourly wage
-     - Workplace (dropdown)
-     - Unique shift name
-     - Optional comments
-   - Click "Save Shift"
+### 3. Create Environment File
 
-2. **Edit a Shift**
+Create a `.env` file in the `server/` directory with the following content:
 
-   - Click the "Edit" button on any shift in the table
-   - Modify the shift details
-   - Click "Update Shift"
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/shiftbuilder
+JWT_SECRET=your-secret-key-change-this-in-production
+JWT_EXPIRE_TIME=3600
+```
 
-3. **Delete a Shift**
+**Important:**
 
-   - Click the "Delete" button on any shift
-   - Confirm the deletion
+- Replace `your-secret-key-change-this-in-production` with a strong, random secret key
+- Adjust `MONGODB_URI` if your MongoDB is running on a different host or port
+- `JWT_EXPIRE_TIME` is in seconds (3600 = 1 hour)
 
-4. **Search Shifts**
-   - Use the search box to find shifts by name
-   - Select date range using "From Date" and "To Date"
-   - Click "Search" to apply filters
-   - Click "Clear" to reset filters
+### 4. Initialize Database Permissions
 
-### Viewing Statistics
+Before running the server, you need to initialize the permissions in the database. You can do this in three ways:
 
-- The "Highest Earning Month" card displays:
-  - Month with the highest total earnings
-  - Total amount earned in that month
+**Option A: Using the initPermissions Script (Recommended)**
 
-### Updating Profile
+Navigate to the server directory and run:
 
-1. Click "Edit Profile" in the navigation menu
-2. Modify your information (same validation as registration)
-3. Click "Update Profile"
-4. Changes are saved immediately
+```bash
+cd server
+npm run init-permissions
+```
 
-### Logging Out
+This script will:
 
-- Click "Logout" in the top menu or footer
-- Confirms logout action
-- Clears session and returns to login page
+- Connect to your MongoDB database
+- Check if permissions already exist
+- Create "admin" and "regular_user" permissions if they don't exist
+- Display a success message when complete
 
-### Password Reset
+**Option B: Using MongoDB Shell**
 
-- On login page, click "Forgot password?"
-- **WARNING**: This will delete all your data
-- Enter username and confirm
-- Register again with new password
+```javascript
+use shiftbuilder
+db.permissions.insertMany([
+  { description: "admin" },
+  { description: "regular_user" }
+])
+```
 
-## Technical Details
+**Option C: Using the API** (after starting the server)
 
-### Data Storage
+Make POST requests to `/api/permission` to create permissions.
 
-All data is stored in **browser localStorage**:
+### 5. Frontend Setup
 
-- `users`: User account information
-- `shifts_{username}`: User-specific shift records
-- `userSession`: Active session data (expires after 60 minutes)
+Navigate to the angular-app directory and install dependencies:
 
-### Validation Rules
+```bash
+cd ../angular-app
+npm install
+```
 
-**Username**:
+## ▶️ Running the Application
 
-- Minimum 6 characters
-- Must contain letters, numbers, and special characters
+### Running the Backend Server
 
-**Password**:
+1. Make sure MongoDB is running on your system
+2. Navigate to the server directory:
+   ```bash
+   cd server
+   ```
+3. Start the server:
 
-- Minimum 6 characters
-- No complexity requirements beyond length
+   ```bash
+   npm start
+   ```
 
-**Names**:
+   For development with auto-reload (recommended):
 
-- Minimum 2 letters
-- Letters only (no numbers or special characters)
+   ```bash
+   npm run dev
+   ```
 
-**Age**:
+The server will start on `http://localhost:3000` (or the port specified in your `.env` file).
 
-- Must be between 18 and 65 years old
+### Running the Frontend Application
 
-**Email**:
+1. Open a new terminal window
+2. Navigate to the angular-app directory:
+   ```bash
+   cd angular-app
+   ```
+3. Start the development server:
 
-- Must be valid email format
+   ```bash
+   npm start
+   ```
 
-**Shift Times**:
+   Or using Angular CLI directly:
 
-- End time must be after start time
-- Hours and profit calculated automatically
+   ```bash
+   ng serve
+   ```
 
-**Shift Name (Slug)**:
+The frontend will be available at `http://localhost:4200` (default Angular port).
 
-- Must be unique per user
-- Can contain any characters
-- Used as identifier for editing/deleting
+### Building for Production
 
-### Browser Compatibility
+To build the frontend for production:
 
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Requires JavaScript enabled
-- Requires localStorage support
+```bash
+cd angular-app
+npm run build
+```
 
-## Development Timeline
+The built files will be in the `angular-app/dist/` directory.
 
-As per specification:
+## 🔌 API Endpoints
 
-- Register page: 1 day ✅
-- Login page: 0.5 day ✅
-- Edit profile page: 0.5 day ✅
-- Add Shift page: 1 day ✅
-- Home page: 2 days ✅
-- **Total: 5 days** ✅
+### User Endpoints
 
-## Security Notes
+- `GET /api/user/` - Get all users (Admin only)
+- `GET /api/user/:id` - Get user by ID
+- `POST /api/user/` - Create new user (registration)
+- `POST /api/user/login` - Login user (returns JWT token)
+- `PATCH /api/user/:id` - Update user by ID
+- `DELETE /api/user/:id` - Delete user (Admin only)
+- `POST /api/user/logout` - Logout user (invalidates token)
 
-⚠️ **Important**: This is a client-side only application using localStorage:
+### Shift Endpoints
 
-- Data is stored locally in the browser
-- No server-side validation or encryption
-- Data can be cleared by browser cache clearing
-- Not suitable for production use without backend integration
-- Session expires after 60 minutes of inactivity
+- `GET /api/shifts/` - Get all shifts (Admin only) or get shift by ID (if `_id` in query)
+- `GET /api/shifts?userId=:userId` - Get shifts by user ID
+- `POST /api/shifts/` - Create new shift (Admin only)
+- `PATCH /api/shifts` - Update shift by ID
+- `DELETE /api/shifts` - Delete shift (Admin only)
 
-## Future Enhancements
+### Comment Endpoints
 
-Potential improvements for production:
+- `GET /api/comment/` - Get all comments (Admin only)
+- `GET /api/comment/:id` - Get comment by ID
+- `GET /api/comment/user/:userId` - Get all comments by user ID
+- `POST /api/comment` - Create new comment
+- `PATCH /api/comment/` - Update comment by ID
+- `DELETE /api/comment/:id` - Delete comment (Admin only)
 
-- Backend API integration
-- Encrypted password storage
-- Database persistence
-- Export shifts to CSV/PDF
-- Multiple workplace management
-- Salary projections
-- Tax calculations
-- Data backup/restore
-- Multi-language support
+### Permission Endpoints
 
-## Support
+- `GET /api/permission` - Get all permissions
+- `POST /api/permission` - Create new permission
 
-For issues or questions, refer to the project specification document or contact your instructor.
+### Authentication
+
+Most endpoints require JWT authentication. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+Admin-only endpoints require both authentication and admin permission.
+
+## 🗄️ Database Setup
+
+### MongoDB Connection
+
+The application connects to MongoDB using the connection string specified in the `.env` file. By default, it connects to:
+
+- **Host:** localhost
+- **Port:** 27017
+- **Database:** shiftbuilder
+
+### Database Collections
+
+The application uses the following collections:
+
+- **users** - Stores user accounts (workers and admins)
+- **shifts** - Stores work shifts assigned to users
+- **comments** - Stores comments associated with users and shifts
+- **permissions** - Stores permission types (admin, regular_user)
+
+### Initial Setup Scripts
+
+The server includes utility scripts in the `server/scripts/` directory:
+
+- `initPermissions.js` - Initialize default permissions
+- `syncComments.js` - Sync comments with users
+- `addShiftNameIndex.js` - Add database indexes for performance
+
+## 🔒 Security Features
+
+- **Password Hashing:** All passwords are encrypted using bcryptjs before storage
+- **JWT Authentication:** Secure token-based authentication
+- **Token Blacklisting:** Logged-out tokens are invalidated
+- **Role-Based Access Control:** Different permissions for admins and regular users
+- **Input Validation:** All user inputs are validated before processing
+
+## 📝 Notes
+
+- The frontend runs on port 4200 by default (Angular development server)
+- The backend runs on port 3000 by default (configurable via `.env`)
+- Make sure both servers are running for the application to work properly
+- MongoDB must be running before starting the backend server
+- Admin users must register through the admin registration page (separate from regular registration)
+
+## 🤝 Contributing
+
+This is a capstone project. For contributions or questions, please contact me!
+
+## 📄 License
+
+This project is part of a capstone project for educational purposes.
 
 ---
 
-**Good Luck with your project submission!** 🚀
+**Happy Coding! 🚀**

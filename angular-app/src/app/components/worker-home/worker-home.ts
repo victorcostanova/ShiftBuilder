@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UtilsService } from '../../services/utils';
 import { AuthService } from '../../services/auth';
+import { ShiftService } from '../../services/shift.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-worker-home',
@@ -13,6 +15,8 @@ import { AuthService } from '../../services/auth';
 })
 export class WorkerHome implements OnInit {
   currentUsername: string | null = null;
+  currentUserId: string | null = null;
+  isAdmin: boolean = false;
   allShifts: any[] = [];
   filteredShifts: any[] = [];
 
@@ -28,26 +32,39 @@ export class WorkerHome implements OnInit {
   constructor(
     private utilsService: UtilsService,
     private authService: AuthService,
+    private shiftService: ShiftService,
     private router: Router
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // Check authentication
     this.currentUsername = this.utilsService.checkAuth();
-    if (!this.currentUsername) {
+    this.currentUserId = this.authService.getCurrentUserId();
+    if (!this.currentUsername || !this.currentUserId) {
       this.router.navigate(['/login']);
       return;
     }
 
+    // Check if user is admin
+    const userData = this.authService.getUserData();
+    this.isAdmin = userData?.permission?.description === 'admin';
+
     // Load and display shifts
-    this.loadShifts();
+    await this.loadShifts();
   }
 
-  loadShifts() {
-    this.allShifts = this.utilsService.getUserShifts(this.currentUsername!);
-    this.filteredShifts = [...this.allShifts];
-    this.displayShifts();
-    this.calculateStatistics();
+  async loadShifts() {
+    try {
+      const shifts = await firstValueFrom(this.shiftService.getUserShifts(this.currentUserId!));
+      this.allShifts = shifts.map((shift: any) => this.shiftService.convertShiftFromApi(shift));
+      this.filteredShifts = [...this.allShifts];
+      this.displayShifts();
+      this.calculateStatistics();
+    } catch (error: any) {
+      console.error('Error loading shifts:', error);
+      this.allShifts = [];
+      this.filteredShifts = [];
+    }
   }
 
   displayShifts() {
@@ -155,21 +172,22 @@ export class WorkerHome implements OnInit {
     this.highestAmount = highestAmount;
   }
 
-  editShift(slug: string) {
-    this.router.navigate(['/add-shift'], { queryParams: { slug: slug } });
+  editShift(shiftId: string) {
+    this.router.navigate(['/add-shift'], { queryParams: { id: shiftId } });
   }
 
-  deleteShift(slug: string) {
+  async deleteShift(shiftId: string) {
     if (!confirm('Are you sure you want to delete this shift?')) {
       return;
     }
 
-    const shifts = this.utilsService.getUserShifts(this.currentUsername!);
-    const updatedShifts = shifts.filter((shift: any) => shift.slug !== slug);
-    this.utilsService.saveUserShifts(this.currentUsername!, updatedShifts);
-
-    this.loadShifts();
-    alert('Shift deleted successfully!');
+    try {
+      await firstValueFrom(this.shiftService.deleteShift(shiftId));
+      await this.loadShifts();
+      alert('Shift deleted successfully!');
+    } catch (error: any) {
+      alert('Error deleting shift: ' + (error.message || 'Unknown error'));
+    }
   }
 
   logout(event: Event) {
